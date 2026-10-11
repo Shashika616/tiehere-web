@@ -1,0 +1,310 @@
+@import "tailwindcss";
+
+@theme {
+  /* Ground, dark-first. Sourced from the app's own dark palette. */
+  --color-ink-900: #07090c;
+  --color-ink-800: #0f1318;
+  --color-ink-700: #151b21;
+  --color-ink-600: #181d24;
+  --color-ink-500: #274050;
+
+  /* The light chapter (safety) */
+  --color-paper-0: #ffffff;
+  --color-paper-50: #f3f6f9;
+  --color-paper-100: #ecf0f4;
+  --color-paper-200: #e8edf2;
+
+  /* Brand, identical in both themes, never tinted. */
+  --color-brand-blue: #0075f6;
+  --color-brand-green: #34c24c;
+
+  /* Support */
+  --color-muted: #9aa7b3;
+  --color-slate-ink: #5d6873;
+  --color-danger: #e5484d;
+
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-sym: cubic-bezier(0.44, 0, 0.56, 1);
+}
+
+:root {
+  --hairline: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Lenis drives scrolling; never both. */
+  scroll-behavior: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: #07090c;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ---- Type scale: fluid, clamp-based ---- */
+.t-display {
+  font-size: clamp(2.75rem, 8.5vw, 8.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+}
+.t-h2 {
+  font-size: clamp(2rem, 5.2vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+}
+.t-h3 {
+  font-size: clamp(1.4rem, 2.6vw, 2.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  font-weight: 500;
+}
+.t-lead {
+  font-size: clamp(1.05rem, 1.65vw, 1.4rem);
+  line-height: 1.5;
+  letter-spacing: -0.012em;
+  color: rgba(255, 255, 255, 0.72);
+}
+.t-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  /* 0.18em at 11px pulled the letters apart faster than the eye could group
+     them. Small text wants a little tracking, not a lot. */
+  letter-spacing: 0.09em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Navigation sits over a moving canvas, so it gets the sans at a real size
+   and near-full contrast rather than the mono label treatment. Vibrancy, not
+   flat grey: weight carries the de-emphasis instead of opacity. */
+.t-nav {
+  font-size: 0.875rem;
+  font-weight: 450;
+  letter-spacing: -0.005em;
+  color: rgba(255, 255, 255, 0.82);
+}
+.t-serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.shell {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 4.5rem);
+}
+
+/* ---- Line-reveal primitive. Per LINE, never per letter. ---- */
+.reveal-line {
+  display: block;
+  overflow: hidden;
+}
+.reveal-line > span {
+  display: block;
+  transform: translateY(110%);
+  will-change: transform;
+}
+.reveal-line.is-in > span {
+  transform: translateY(0);
+  transition: transform 820ms var(--ease-out-soft);
+  transition-delay: var(--d, 0ms);
+}
+
+.rise {
+  opacity: 0;
+  transform: translateY(18px);
+  will-change: transform, opacity;
+}
+.rise.is-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms var(--ease-out-soft),
+    transform 700ms var(--ease-out-soft);
+  transition-delay: var(--d, 0ms);
+}
+
+.hairline {
+  border-color: var(--hairline);
+}
+
+/* Focus: visible, branded, never removed. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: #0075f6;
+  color: #fff;
+}
+
+html {
+  caret-color: #0075f6;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+  background-clip: content-box;
+}
+
+/* ---- Reduced motion: real implementation, not a checkbox. ---- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-line > span {
+    transform: none !important;
+    transition: none !important;
+  }
+  .rise {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---- The light chapter.
+   The film sets data-film-light from the ground colour it is actually
+   painting, so fixed UI inverts exactly when the picture does, no second
+   source of truth, no scroll offsets to keep in sync. ---- */
+html[data-film-light="1"] header[data-header] {
+  color: #0f1318;
+  background: rgba(243, 246, 249, 0.72);
+  border-color: rgba(15, 19, 24, 0.08);
+}
+html[data-film-light="1"] header[data-header] .t-nav {
+  color: rgba(15, 19, 24, 0.78);
+}
+html[data-film-light="1"] header[data-header] .header-scrim {
+  background: linear-gradient(to bottom, rgba(243, 246, 249, 0.92), rgba(243, 246, 249, 0));
+}
+html[data-film-light="1"] header[data-header] a[href="#get"] {
+  background: #0f1318;
+  color: #ffffff;
+}
+header[data-header],
+header[data-header] .t-nav,
+header[data-header] .header-scrim,
+header[data-header] a[href="#get"] {
+  transition:
+    color 450ms var(--ease-out-soft),
+    background 450ms var(--ease-out-soft),
+    background-color 450ms var(--ease-out-soft),
+    border-color 450ms var(--ease-out-soft);
+}
+
+/* A scroll edge effect rather than a hard bar: the chrome always has ground
+   under it, because the canvas behind it never stops changing. */
+.header-scrim {
+  background: linear-gradient(to bottom, rgba(7, 9, 12, 0.88), rgba(7, 9, 12, 0));
+}
+
+/* ---- The mark, when it draws itself at the finale ---- */
+.mark-path {
+  stroke-dashoffset: 0;
+}
+.mark-head {
+  opacity: 0;
+}
+
+/* Hide the native scrollbar on the mobile intent carousel without
+   removing keyboard or wheel access to it. */
+.\[scrollbar-width\:none\]::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---- Text pages ---- */
+.doc h2 {
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 3rem 0 1rem;
+}
+.doc p {
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.7;
+  margin-bottom: 1.1rem;
+  max-width: 46rem;
+}
+.doc ul {
+  margin: 0 0 1.4rem 1.1rem;
+  padding: 0;
+  list-style: none;
+}
+.doc li {
+  position: relative;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.7;
+  margin-bottom: 0.6rem;
+}
+.doc li::before {
+  content: "";
+  position: absolute;
+  left: -1.1rem;
+  top: 0.72em;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #34c24c;
+}
+.doc strong {
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Anchored sections must not land under the fixed header when the nav jumps. */
+section[id],
+article[id] {
+  scroll-margin-top: 5.5rem;
+}
