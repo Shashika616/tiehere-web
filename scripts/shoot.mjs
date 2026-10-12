@@ -17,11 +17,15 @@ const outDir = process.env.SHOOT_DIR || ".shots";
 
 const STOPS = [
   ["01-hero", "#top", 0.0],
+  ["01b-scene-alone", "#scene-alone", 0.3],
   ["02-problem", "[data-film='sparse']", 0.3],
+  ["02b-scene-city", "#scene-city", 0.3],
   ["03-proximity", "[data-film='city']", 0.3],
   ["04-intents-a", "#intents", 0.08],
   ["05-intents-b", "#intents", 0.55],
+  ["05c-intents-end", "#intents", 0.72],
   ["06-how", "#how", 0.35],
+  ["06b-scene-street", "#scene-street", 0.3],
   ["07-trust", "#trust", 0.12],
   ["08-trust-b", "#trust", 0.55],
   ["09-principles", "#principles", 0.3],
@@ -29,6 +33,7 @@ const STOPS = [
   ["11-faq", "#faq", 0.2],
   ["12-cta", "#get", 0.0],
   ["13-cta-b", "#get", 0.3],
+  ["14-footer", "footer", 1.0],
 ];
 
 mkdirSync(outDir, { recursive: true });

@@ -1,5 +1,6 @@
 import { STEPS } from "@/content/site";
 import { RevealLines, Rise } from "@/components/ui/Reveal";
+import Numeral from "@/components/ui/Numeral";
 
 /**
  * Sticky stacked cards, the one Tier-A pattern worth keeping. No data-film
@@ -33,7 +34,7 @@ export default function HowItWorks() {
                   {step.n}
                 </span>
                 <div className="relative grid gap-5 md:grid-cols-[auto_1fr] md:gap-14">
-                  <span className="t-label md:pt-3">{`{${step.n}}`}</span>
+                  <Numeral value={step.n} className="self-start md:pt-5" />
                   <div>
                     <h3 className="t-h3 max-w-[18ch]">{step.title}</h3>
                     <p className="t-lead mt-5 max-w-[48ch]">{step.body}</p>

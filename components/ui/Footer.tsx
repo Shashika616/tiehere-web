@@ -36,7 +36,7 @@ export default function Footer() {
         </nav>
       </div>
 
-      <div className="shell flex flex-col gap-3 border-t border-white/[0.07] py-7 md:flex-row md:items-center md:justify-between">
+      <div className="shell flex flex-col gap-3 border-t border-white/[0.07] py-7 pb-28 md:flex-row md:items-center md:justify-between md:pb-7">
         <p className="t-label">© {year} {BRAND.name}</p>
         <p className="t-label">{BRAND.domain}</p>
       </div>

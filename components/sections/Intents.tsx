@@ -16,10 +16,10 @@ import { clamp, lerp } from "@/lib/scroll";
  * On touch it is not pinned at all, it becomes a native snap carousel.
  * Hijacking vertical scroll to move things sideways on a phone is a trap.
  *
- * The artwork comes from the app itself, under a blue/green duotone. The
- * sources are mixed in style, and raw they would read as clip art dropped on a
- * dark page; one shared treatment makes them a family and ties them to the two
- * brand colours. Colour returns on hover, which is the card coming alive.
+ * The photographs are CC0 (see IMAGE-CREDITS.md), graded down and tinted
+ * lightly toward the two brand colours so seven pictures from four different
+ * sources read as one set. Full colour returns on hover, which is the card
+ * coming alive under the pointer.
  */
 export default function Intents() {
   const section = useRef<HTMLElement>(null);
@@ -113,12 +113,12 @@ export default function Intents() {
                   fill
                   sizes="(max-width: 900px) 70vw, 22rem"
                   priority={i < 2}
-                  className="object-cover saturate-0 brightness-[0.46] contrast-[1.12] transition-[filter,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04] group-hover:saturate-100 group-hover:brightness-[0.8]"
+                  className="object-cover saturate-[0.62] brightness-[0.72] contrast-[1.02] transition-[filter,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05] group-hover:saturate-100 group-hover:brightness-[1]"
                   style={{ objectPosition: intent.focus }}
                 />
                 <div
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 mix-blend-color opacity-45 transition-opacity duration-700 group-hover:opacity-0"
+                  className="pointer-events-none absolute inset-0 mix-blend-color opacity-[0.18] transition-opacity duration-700 group-hover:opacity-0"
                   style={{
                     background:
                       i % 2 === 0
@@ -132,7 +132,7 @@ export default function Intents() {
                   className="pointer-events-none absolute inset-0"
                   style={{
                     background:
-                      "linear-gradient(to top, #070a0e 0%, #070a0e 34%, rgba(7,10,14,0.88) 50%, rgba(7,10,14,0.42) 72%, rgba(7,10,14,0.18) 100%)",
+                      "linear-gradient(to top, #070a0e 0%, #070a0e 26%, rgba(7,10,14,0.82) 44%, rgba(7,10,14,0.3) 68%, rgba(7,10,14,0.08) 100%)",
                   }}
                 />
 

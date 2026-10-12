@@ -1,4 +1,5 @@
 import Hero from "@/components/sections/Hero";
+import ScrollScene from "@/components/motion/ScrollScene";
 import Problem from "@/components/sections/Problem";
 import Proximity from "@/components/sections/Proximity";
 import Intents from "@/components/sections/Intents";
@@ -54,10 +55,30 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Hero />
+      <ScrollScene
+        id="scene-alone"
+        src="/scenes/alone.jpg"
+        alt="One person walking alone down a narrow city street"
+        caption="A thousand contacts. One of you on this street."
+        height="66vh"
+      />
       <Problem />
+      <ScrollScene
+        id="scene-city"
+        src="/scenes/rain.jpg"
+        alt="A red umbrella on a neon-lit street in the rain at night"
+        caption="Every one of those lights is somebody's evening."
+      />
       <Proximity />
       <Intents />
       <HowItWorks />
+      <ScrollScene
+        id="scene-street"
+        src="/scenes/city-street.jpg"
+        alt="A narrow street at night with a small lit bar open on the corner"
+        caption="A place, an hour, and one person who said yes."
+        height="64vh"
+      />
       <Trust />
       <Principles />
       <Safety />

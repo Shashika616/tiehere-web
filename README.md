@@ -36,26 +36,34 @@ the words. Sections *without* the attribute are deliberate cross-dissolves betwe
 
 ## Imagery
 
-The seven intent cards use the app's own artwork, copied into `public/intents/` with the exact
-intent-to-scene pairing `frontend/lib/core/models/intent_type.dart` already makes, so site and app
-share one visual language.
+All photography is **CC0 / public domain**: free for commercial use, no attribution, no
+watermarks. Sourced through the [Openverse](https://openverse.org) API filtered to **StockSnap**,
+then downsized and re-encoded locally. Provenance is in [IMAGE-CREDITS.md](IMAGE-CREDITS.md).
 
-The sources are mixed in style (flat illustration for most, a stock vector silhouette for OUTING),
-so they get one shared treatment: desaturated and darkened, tinted toward brand blue and green with
-`mix-blend-mode: color`, and returned to full colour on hover. Raw, they would read as clip art
-dropped onto a dark page; under one duotone they read as a family.
+**No identifiable faces, deliberately.** CC0 waives the photographer's copyright, not the
+personality rights of the people pictured, and a likeness used in advertising is governed
+separately. Every image carries human presence another way: hands, a handshake, a figure from
+behind, a crowd in silhouette. Keep that rule when replacing any of them.
 
-**Three things to resolve before launch:**
+- `public/intents/` : seven carousel photographs, one per intent.
+- `public/scenes/` : three full-bleed scroll chapters.
 
-1. `coffee.jpg` contains an Apple logo on a laptop lid. The card crop (`focus: "72% 45%"` in
-   `content/site.ts`) currently pushes it out of frame, but the asset should be replaced rather
-   than cropped around.
-2. `rideshare.jpg` shows a person working alone at a cafe window, not a shared ride. The app's own
-   source comment admits there is no vehicle scene in the set. It needs real artwork.
-3. The sources are 520x390. That is soft for a card rendered at ~350px CSS on a 2x display.
-   Re-export larger, or commission replacements.
+Three photographic cuts punctuate the scroll, and they carry the argument rather than decorating
+it: a lone figure on a street before *"You know a thousand people. You've met forty."*, a red
+umbrella in neon rain before *"Here is not a metaphor."*, and a small lit bar before the trust
+ladder. They are **framed insets, never full-bleed**, so the canvas film stays visible around
+them and photography never replaces the thing that gives the site its identity. Each is scrubbed
+by scroll: the frame scales and fades up as it enters while the picture inside drifts against the
+page, which is what makes a still photograph read as footage.
 
-Licensing for these images has not been confirmed for public marketing use.
+Cards sit at `saturate .62 / brightness .72` with an 18% blue-green tint and return to full
+colour on hover. That hover is the card coming alive under the pointer.
+
+The sources are landscape and the cards are portrait, so `object-cover` scales by height and only
+the **horizontal** value of `focus` in `content/site.ts` has any effect.
+
+**When swapping images**, clear `.next/dev/cache/images` or the dev server keeps serving the old
+optimised derivatives under the same filenames.
 
 ## Deliberate decisions
 

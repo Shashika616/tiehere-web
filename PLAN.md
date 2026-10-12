@@ -351,7 +351,7 @@ tiehere-web/
 |---|---|---|
 | Vector mark | **Needed** | Only a 276×264 PNG exists (`assets/images/brand/tiehere_mark.png`). Trace to clean SVG before anything else — it's the hero, the favicon, the OG card, the knot animation |
 | Wordmark | **Needed** | "TieHere" set in the chosen display face, kerned by hand |
-| 7 intent scenes | **Have** | Reuse the app's landing collage; confirm licensing on those photos before they go on a public site under our domain |
+| 7 intent scenes | **Done** | CC0 photography, not the app's illustrations. See IMAGE-CREDITS.md. `mentorship` and `networking` are weak and worth replacing |
 | App screenshots | **Needed** | Device-framed, dark theme, real content, no lorem |
 | Proof numbers | **Decide** | Real numbers or no numbers (§6.2) |
 | Founder/team photo | Optional | A trust product benefits from a face. Worth considering |

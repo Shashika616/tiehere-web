@@ -24,7 +24,8 @@ export type Intent = {
   /** Scene from the app's own intent artwork. The pairing is the one the app
    *  already makes in `intent_type.dart`, so site and app share one language. */
   image: string;
-  /** Where to anchor the crop. `coffee` is pushed right, off a laptop lid. */
+  /** Horizontal anchor for the crop. These sources are landscape and the cards
+   *  are portrait, so cover scales by height: only the X value has any effect. */
   focus: string;
 };
 
@@ -35,7 +36,7 @@ export const INTENTS: Intent[] = [
     tagline: "A quick cup, a new connection",
     note: "Thirty minutes, no agenda beyond the one you both already agreed to.",
     image: "/intents/coffee.jpg",
-    focus: "72% 45%",
+    focus: "50% 50%",
   },
   {
     id: "meal",
@@ -43,7 +44,7 @@ export const INTENTS: Intent[] = [
     tagline: "Breakfast, lunch or dinner: the time decides",
     note: "You pick a time. The app names the sitting, so you never pick a meal from a menu of meals.",
     image: "/intents/meal.jpg",
-    focus: "50% 45%",
+    focus: "50% 50%",
   },
   {
     id: "networking",
@@ -51,7 +52,7 @@ export const INTENTS: Intent[] = [
     tagline: "Grow your circle",
     note: "The word usually means a room of strangers. Here it means one person, on purpose.",
     image: "/intents/networking.jpg",
-    focus: "42% 50%",
+    focus: "45% 50%",
   },
   {
     id: "mentorship",
@@ -59,7 +60,7 @@ export const INTENTS: Intent[] = [
     tagline: "Learn from someone a step ahead",
     note: "A step ahead, not a stage above. The useful distance is small.",
     image: "/intents/mentorship.jpg",
-    focus: "38% 50%",
+    focus: "52% 50%",
   },
   {
     id: "outing",
@@ -67,7 +68,7 @@ export const INTENTS: Intent[] = [
     tagline: "A gig, a game, a night out",
     note: "The thing you had a spare ticket for, and nobody to go with.",
     image: "/intents/outing.jpg",
-    focus: "50% 60%",
+    focus: "52% 50%",
   },
   {
     id: "rideshare",
@@ -75,7 +76,7 @@ export const INTENTS: Intent[] = [
     tagline: "Share the road, split the fare",
     note: "Same direction, same hour. The commute stops being dead time.",
     image: "/intents/rideshare.jpg",
-    focus: "55% 50%",
+    focus: "50% 50%",
   },
   {
     id: "dating",
@@ -83,7 +84,7 @@ export const INTENTS: Intent[] = [
     tagline: "Connect beyond the office",
     note: "One intent out of seven, and entirely opt-in. It is not what this app is.",
     image: "/intents/dating.jpg",
-    focus: "50% 50%",
+    focus: "38% 50%",
   },
 ];
 

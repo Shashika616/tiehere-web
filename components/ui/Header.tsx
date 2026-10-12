@@ -11,12 +11,27 @@ import Mark from "./Mark";
 export default function Header() {
   const [stuck, setStuck] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [atEnd, setAtEnd] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > window.innerHeight * 0.75);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Retire the sticky CTA once the real one is on screen. Past that point it
+  // is both redundant (the final section carries the store buttons) and in the
+  // way: fixed to the viewport bottom, it sat on top of the footer.
+  useEffect(() => {
+    const target = document.querySelector("#get");
+    if (!target) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setAtEnd(entry.isIntersecting),
+      { rootMargin: "0px 0px -12% 0px", threshold: 0 },
+    );
+    io.observe(target);
+    return () => io.disconnect();
   }, []);
 
   useEffect(() => {
@@ -124,7 +139,9 @@ export default function Header() {
       {/* Thumb-reachable persistent CTA. Highest-converting placement on mobile. */}
       <div
         className={`fixed inset-x-0 bottom-0 z-40 p-4 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:hidden ${
-          stuck && !menu ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+          stuck && !menu && !atEnd
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-4 opacity-0"
         }`}
       >
         <a
