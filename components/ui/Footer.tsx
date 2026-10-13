@@ -1,41 +1,138 @@
-import Lockup from "./Lockup";
-import { BRAND } from "@/content/site";
+"use client";
 
+import Mark from "./Mark";
+import LocalClock from "./LocalClock";
+import StoreButtons from "./StoreButtons";
+import { BRAND } from "@/content/site";
+import { useInView } from "@/lib/useInView";
+
+const PRODUCT = [
+  { href: "#how", label: "How it works" },
+  { href: "#intents", label: "Intents" },
+  { href: "#trust", label: "Trust levels" },
+  { href: "#faq", label: "FAQ" },
+];
+
+const LEGAL = [
+  { href: "/safety", label: "Safety" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
+  { href: "/delete-account", label: "Delete your account" },
+];
+
+// TODO before launch: real destinations. Until these accounts exist they are
+// placeholders, exactly like the store links, and are listed in the README.
+const REACH = [
+  { href: "#", label: "Email" },
+  { href: "#", label: "LinkedIn" },
+  { href: "#", label: "Instagram" },
+  { href: "#", label: "X" },
+];
+
+/**
+ * The sign-off.
+ *
+ * A wordmark at full scale, the reader's own place and local time beside it,
+ * then the index. The giant wordmark rises on a clip mask when the footer
+ * comes into view: one CSS transition per word, fired once by an observer, so
+ * there is no scroll handler and nothing runs per frame.
+ *
+ * It is decorative and marked `aria-hidden`: the accessible brand name is on
+ * the home link in the header and in the copyright line below, which is what
+ * makes it safe to split for the stagger.
+ *
+ * The footer rises over the pinned final CTA rather than sitting below it,
+ * the same sticky stack the step panels use. That requires an opaque ground:
+ * a translucent footer sliding over a live section reads as a rendering bug,
+ * which is the exact defect the step panels had before they became full-bleed
+ * photographs.
+ */
 export default function Footer() {
   const year = new Date().getFullYear();
+  const ref = useInView<HTMLDivElement>(0.15);
 
   return (
-    <footer className="relative border-t border-white/10">
-      <div className="shell grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr] md:py-20">
+    <footer data-film="knot" className="foot-rise relative overflow-hidden border-t border-white/10">
+      <div ref={ref} className="shell grid gap-16 py-20 md:grid-cols-[1.35fr_1fr] md:gap-20 md:py-28">
         <div>
-          <Lockup />
-          <p className="t-lead mt-5 max-w-sm !text-[0.95rem]">{BRAND.line}</p>
+          <h2 className="foot-mark" aria-hidden="true">
+            <span className="foot-word">
+              <span style={{ ["--d" as string]: "0ms" }}>Tie</span>
+            </span>
+            <span className="foot-word">
+              <span className="brand-here" style={{ ["--d" as string]: "90ms" }}>
+                Here
+              </span>
+            </span>
+          </h2>
+          <p className="t-lead mt-7 max-w-[34ch] !text-[1.05rem]">{BRAND.line}</p>
+          <div className="mt-9">
+            <StoreButtons />
+          </div>
         </div>
 
+        <div className="md:justify-self-end md:text-left">
+          <LocalClock />
+        </div>
+      </div>
+
+      <div className="shell grid gap-12 border-t border-white/[0.07] py-14 md:grid-cols-3 md:gap-10">
         <nav aria-label="Product">
-          <p className="t-label mb-4">product</p>
-          <ul className="space-y-2.5 text-sm text-white/65">
-            <li><a href="#how" className="transition-colors hover:text-white">How it works</a></li>
-            <li><a href="#intents" className="transition-colors hover:text-white">Intents</a></li>
-            <li><a href="#trust" className="transition-colors hover:text-white">Trust levels</a></li>
-            <li><a href="#faq" className="transition-colors hover:text-white">FAQ</a></li>
+          <p className="t-label mb-6">product</p>
+          <ul className="space-y-1">
+            {PRODUCT.map((l) => (
+              <li key={l.href}>
+                <a href={l.href} className="foot-link">
+                  <span>{l.label}</span>
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
 
         <nav aria-label="Legal">
-          <p className="t-label mb-4">legal</p>
-          <ul className="space-y-2.5 text-sm text-white/65">
-            <li><a href="/safety" className="transition-colors hover:text-white">Safety</a></li>
-            <li><a href="/privacy" className="transition-colors hover:text-white">Privacy</a></li>
-            <li><a href="/terms" className="transition-colors hover:text-white">Terms</a></li>
-            <li><a href="/delete-account" className="transition-colors hover:text-white">Delete your account</a></li>
+          <p className="t-label mb-6">legal</p>
+          <ul className="space-y-1">
+            {LEGAL.map((l) => (
+              <li key={l.href}>
+                <a href={l.href} className="foot-link">
+                  <span>{l.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <nav aria-label="Reach us">
+          <p className="t-label mb-6">reach us</p>
+          <ul className="border-t border-white/10">
+            {REACH.map((l) => (
+              <li key={l.label}>
+                <a href={l.href} className="foot-row">
+                  <span>{l.label}</span>
+                  <svg viewBox="0 0 16 16" aria-hidden="true" className="foot-row-arrow">
+                    <path
+                      d="M4 12 12 4M6 4h6v6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
       </div>
 
-      <div className="shell flex flex-col gap-3 border-t border-white/[0.07] py-7 pb-28 md:flex-row md:items-center md:justify-between md:pb-7">
-        <p className="t-label">© {year} {BRAND.name}</p>
+      <div className="shell flex flex-col gap-4 border-t border-white/[0.07] py-8 pb-28 md:flex-row md:items-center md:justify-between md:pb-8">
+        <p className="t-label">
+          © {year} {BRAND.name}
+        </p>
         <p className="t-label">{BRAND.domain}</p>
+        <Mark size={22} className="opacity-70" />
       </div>
     </footer>
   );

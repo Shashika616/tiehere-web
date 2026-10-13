@@ -224,9 +224,18 @@ export default function CinematicFilm() {
       document.documentElement.dataset.filmLight = isLight ? "1" : "0";
     };
 
+    // Exposed for the local probes in scripts/. Read-only state, no behaviour.
+    (window as unknown as { __film?: unknown }).__film = {
+      state: scrollState,
+      anchors: () => anchors,
+    };
+
     const t0 = performance.now();
 
     const draw = (now: number) => {
+      // Nothing to draw while an opaque section covers the whole viewport.
+      if (scrollState.covered) return;
+
       const time = (now - t0) / 1000;
 
       // Filmic lag. The picture trails the scrubber slightly, which is most of
@@ -366,7 +375,23 @@ export default function CinematicFilm() {
     allocate();
     measure();
     measureAnchors();
-    // Re-measure once layout has settled (fonts, images, late hydration).
+
+    // Anchors are positions in a document whose height keeps changing: fonts
+    // swap, images decode, sticky sections resolve. Measuring once on mount
+    // and hoping is how the film ended up painting the paper-white safety
+    // chapter behind the footer, because every stored position was stale by a
+    // thousand pixels. A ResizeObserver on the body catches every growth.
+    let pending = 0;
+    const remeasure = () => {
+      if (pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        measureAnchors();
+      });
+    };
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(document.body);
+
     const settle = window.setTimeout(measureAnchors, 600);
     const settle2 = window.setTimeout(measureAnchors, 1800);
 
@@ -377,6 +402,8 @@ export default function CinematicFilm() {
 
     return () => {
       stop();
+      ro.disconnect();
+      if (pending) cancelAnimationFrame(pending);
       window.clearTimeout(settle);
       window.clearTimeout(settle2);
       window.removeEventListener("resize", onResize);

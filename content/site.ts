@@ -88,23 +88,37 @@ export const INTENTS: Intent[] = [
   },
 ];
 
-export type Step = { n: string; title: string; body: string };
+export type Step = {
+  n: string;
+  title: string;
+  body: string;
+  /** Full-bleed panel image. CC0, see IMAGE-CREDITS.md. */
+  image: string;
+  /** What the panel is showing, for the right-hand rule. */
+  meta: string;
+};
 
 export const STEPS: Step[] = [
   {
     n: "01",
     title: "Say where, when, and why",
     body: "Pick an intent, a place and a window. That is the whole of it. No profile essay, no pitch, no feed to maintain.",
+    image: "/steps/step-1.jpg",
+    meta: "a place, a window",
   },
   {
     n: "02",
     title: "Verified people ask to join",
     body: "Requests come from accounts that cleared the trust ladder. You see who they are before you answer, and you answer once.",
+    image: "/steps/step-2.jpg",
+    meta: "verified only",
   },
   {
     n: "03",
     title: "You meet",
     body: "Details unlock on confirmation. Safety features travel with you. Afterwards you both rate, and the ladder remembers.",
+    image: "/steps/step-3.jpg",
+    meta: "in person",
   },
 ];
 

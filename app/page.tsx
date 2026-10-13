@@ -72,6 +72,7 @@ export default function Home() {
       <Proximity />
       <Intents />
       <HowItWorks />
+      <Trust />
       <ScrollScene
         id="scene-street"
         src="/scenes/city-street.jpg"
@@ -79,11 +80,17 @@ export default function Home() {
         caption="A place, an hour, and one person who said yes."
         height="64vh"
       />
-      <Trust />
       <Principles />
       <Safety />
       <Faq />
       <FinalCta />
+      {/* Sticky travel. A sticky element can only stick inside its parent's
+          box, and the CTA is the last child of <main>: with nothing below it
+          there, it unstuck the instant it pinned and the footer simply
+          followed underneath. This reserves a screen of room for it to hold
+          while the footer rises over it; the footer takes the same height
+          back as a negative margin, so the document is no taller. */}
+      <div data-cta-travel aria-hidden="true" className="h-[100svh]" />
     </>
   );
 }

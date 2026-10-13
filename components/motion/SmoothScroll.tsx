@@ -20,16 +20,32 @@ export default function SmoothScroll() {
 
     const isTouch = window.matchMedia("(hover: none)").matches;
 
+    // Document height is not a constant: fonts swap, images decode, sticky
+    // sections resolve. Caching it at mount and only refreshing on window
+    // resize left `raw` reading 0.73 at the true 0.90 once the page had grown,
+    // and every scroll-driven thing on the site inherited that error.
     let max = 1;
     const measure = () => {
-      max = document.documentElement.scrollHeight - window.innerHeight;
+      max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     };
     measure();
+
+    let pending = 0;
+    const remeasure = () => {
+      if (pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        measure();
+        readProgress();
+      });
+    };
+    const ro = new ResizeObserver(remeasure);
 
     const readProgress = () => {
       scrollState.raw = max > 0 ? window.scrollY / max : 0;
     };
     readProgress();
+    ro.observe(document.body);
 
     if (reduced || isTouch) {
       // Native scrolling: we only observe it. Emulated momentum is worse than
@@ -41,6 +57,8 @@ export default function SmoothScroll() {
       });
       if (reduced) scrollState.smooth = scrollState.raw;
       return () => {
+        ro.disconnect();
+        if (pending) cancelAnimationFrame(pending);
         window.removeEventListener("scroll", readProgress);
       };
     }
@@ -74,6 +92,8 @@ export default function SmoothScroll() {
 
     return () => {
       stop();
+      ro.disconnect();
+      if (pending) cancelAnimationFrame(pending);
       window.removeEventListener("resize", onResize);
       lenis.destroy();
       delete (window as unknown as { lenis?: Lenis }).lenis;

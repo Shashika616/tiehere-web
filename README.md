@@ -47,11 +47,14 @@ behind, a crowd in silhouette. Keep that rule when replacing any of them.
 
 - `public/intents/` : seven carousel photographs, one per intent.
 - `public/scenes/` : three full-bleed scroll chapters.
+- `public/steps/` : three full-bleed panels for "How it works".
 
 Three photographic cuts punctuate the scroll, and they carry the argument rather than decorating
 it: a lone figure on a street before *"You know a thousand people. You've met forty."*, a red
-umbrella in neon rain before *"Here is not a metaphor."*, and a small lit bar before the trust
-ladder. They are **framed insets, never full-bleed**, so the canvas film stays visible around
+umbrella in neon rain before *"Here is not a metaphor."*, and a small lit bar **after** the trust
+ladder, where *"A place, an hour, and one person who said yes"* reads as the payoff for having
+climbed it. That third one used to sit directly after the stacking panels, where a framed inset
+following three full-bleed screens read as an anticlimax. They are **framed insets, never full-bleed**, so the canvas film stays visible around
 them and photography never replaces the thing that gives the site its identity. Each is scrubbed
 by scroll: the frame scales and fades up as it enters while the picture inside drifts against the
 page, which is what makes a still photograph read as footage.
@@ -107,6 +110,45 @@ lockup's. `components/ui/Lockup.tsx` is shared by all three copies so they canno
 The wordmark carries the mark's own two colours, solid, never a gradient. Brand blue is 4.5:1 on
 the dark ground, which clears AA but only just, and **fails** on the light safety chapter (3.9:1),
 so that chapter gets darker variants of both.
+
+## How it works: stacking panels
+
+Three steps as full-bleed photographic panels that stack over one another, in the manner of a
+studio's work index. The stacking is **pure CSS `position: sticky`**: each panel pins to the top
+and the next, later in flow, scrolls up over it. No scroll listener, no per-frame transform, no
+JavaScript in the effect at all. The compositor does the whole thing, which is the only honest
+way to promise it never stutters.
+
+It also fixed a real defect. The cards it replaced were translucent, so a covered card's body
+text showed through the one on top and read as broken. A full-bleed photograph is opaque by
+definition.
+
+The one piece of JavaScript in the section is an optimisation rather than an effect: while the
+stack covers the viewport the canvas film behind it cannot be seen, so `scrollState.covered`
+tells the film to stop drawing. That is three screens of scrolling with zero canvas work. Under
+reduced motion the panels become ordinary sequential sections instead of sliding over each other.
+
+## The sign-off
+
+The footer is not a slab under the page. The final CTA **pins** and the footer rises over it, the
+same pure-CSS sticky stack the step panels use, which is why it needs an opaque ground: a
+translucent surface sliding over a live section reads as a rendering bug.
+
+One thing that is easy to get wrong here: a sticky element can only stick inside **its parent's
+box**, and the CTA is the last child of `<main>` while the footer is a sibling of `<main>`. With
+nothing below it inside its own parent, the CTA unstuck the instant it pinned and the footer just
+followed underneath. `page.tsx` reserves a screen of travel after the CTA and the footer takes the
+same height back as a negative margin, so the document is no taller. That margin is scoped with
+`main:has([data-cta-travel]) + footer`, because the text pages share this footer and must not
+inherit it.
+
+Inside it: the wordmark at full scale, rising on a clip mask when the footer comes into view (one
+transition per word, fired once by an observer, nothing per frame), and beside it the reader's own
+city, UTC offset and a live local clock. The reference site uses that device to say where the
+studio is; ours says where *you* are, because a place and a window are the only two things the
+product ever asks for. It is read from `Intl`, so it needs no permission, no network and no API,
+and the seconds are written to a text node through a ref rather than React state, which would
+re-render the subtree and force a style recalc once a second.
 
 ## Navigation states
 
@@ -179,6 +221,11 @@ judder against 60fps scrolling; it was reverted and the cost taken out of each f
    track and the scenes tightened to match.
 6. **The brand flight wrote a CSS custom property on `:root` every frame**, which invalidates
    style for the entire document subtree. It writes `style.opacity` on the one element instead.
+7. **Scroll progress was computed against a document height cached at mount.** Fonts swap, images
+   decode, sticky sections resolve, and the page kept growing afterwards, so `raw` read 0.73 at the
+   true 0.90. Every scroll-driven thing on the site inherited that error, and the visible symptom
+   was the film painting the paper-white safety chapter behind a footer full of white type. Both
+   `SmoothScroll` and the film now re-measure from a `ResizeObserver` on the body.
 
 Also: style writes are guarded so an unchanged frame costs no recalc; the card tint is a plain
 translucent gradient rather than `mix-blend-mode`, because a blend group on each of seven cards

@@ -11,6 +11,10 @@ import { onTick, ORDER } from "@/lib/ticker";
  * The payoff. Every particle in the film has been walking toward this shape
  * since the first screen; here the mark draws itself, scrubbed by the last
  * stretch of scroll, and then holds.
+ *
+ * It pins while the footer rises over it, the same sticky stack the three
+ * step panels use. The footer has to be opaque for that to read, which is why
+ * it carries its own ground rather than letting the canvas through.
  */
 export default function FinalCta() {
   const wrap = useRef<HTMLDivElement>(null);
@@ -63,7 +67,7 @@ export default function FinalCta() {
   }, []);
 
   return (
-    <section id="get" data-film="knot" className="relative flex min-h-[105svh] items-center py-32">
+    <section id="get" data-film="knot" className="cta-pin relative flex items-center py-24">
       <div className="shell w-full text-center">
         <div ref={wrap} className="flex justify-center">
           <Mark size={132} draw title="The TieHere mark: two figures, tied" />

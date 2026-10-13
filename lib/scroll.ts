@@ -12,6 +12,8 @@ export const scrollState = {
   smooth: 0,
   velocity: 0,
   reduced: false,
+  /** True while an opaque full-screen section covers the canvas. */
+  covered: false,
 };
 
 export function prefersReducedMotion(): boolean {

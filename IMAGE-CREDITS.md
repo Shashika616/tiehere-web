@@ -34,6 +34,9 @@ needs a model release, not just a CC0 licence.
 | `public/scenes/alone.jpg` | one figure from behind on a street | CC0 | stocksnap | [source](https://stocksnap.io/photo/woman-girl-V81YAU9P1W) |
 | `public/scenes/rain.jpg` | a red umbrella in neon rain | CC0 | stocksnap | [source](https://stocksnap.io/photo/red-umbrella-45JIYYO371) |
 | `public/scenes/city-street.jpg` | an empty street, one lit bar | CC0 | rawpixel | [source](https://www.rawpixel.com/image/5903332/photo-image-public-domain-house-free) |
+| `public/steps/step-1.jpg` | a city at dusk, traffic running | CC0 | stocksnap | [source](https://stocksnap.io/photo/cityscape-skyline-KDOIQSH4ZW) |
+| `public/steps/step-2.jpg` | a phone in hand, seen from behind | CC0 | stocksnap | [source](https://stocksnap.io/photo/smartphone-screen-FFJTPJOQPG) |
+| `public/steps/step-3.jpg` | milk poured into coffee at a table | CC0 | stocksnap | [source](https://stocksnap.io/photo/coffee-milk-SNCKZWID2M) |
 
 ## If you replace these
 
