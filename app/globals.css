@@ -166,6 +166,14 @@ html.lenis body {
   border-radius: 4px;
 }
 
+/* A section focused only so a keyboard user lands in the right place is not
+   an interactive control, and outlining a full-bleed section draws a stray
+   line across the page. The scroll itself is the feedback. */
+[data-scroll-target]:focus,
+[data-scroll-target]:focus-visible {
+  outline: none;
+}
+
 ::selection {
   background: #0075f6;
   color: #fff;

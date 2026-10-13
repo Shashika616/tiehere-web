@@ -13,7 +13,7 @@ export default function Page() {
     <Doc
       kicker="safety"
       title="How safety actually works"
-      lede="Mechanisms in the product, described plainly. If something here is not shipped, it does not belong on this page."
+      lede="Mechanisms in the product, described plainly, including what they cannot do. If something here is not shipped, it does not belong on this page."
     >
       <h2>The trust ladder</h2>
       <p>
@@ -35,6 +35,25 @@ export default function Page() {
             <strong>{s.title}.</strong> {s.body}
           </li>
         ))}
+      </ul>
+
+      <h2>What a check cannot do</h2>
+      <p>
+        A checked account means a real phone, a real email and a real employer are attached to
+        it. It does not mean we have met this person, and it does not tell you how they will
+        behave. <strong>No app can tell you that.</strong> What the checks do is make anonymity
+        expensive: if something goes wrong there is a real identity to find, and that is a
+        deterrent rather than a guarantee.
+      </p>
+      <p>
+        This is why nothing here calls a person verified. A phone number can be verified. An
+        email can be verified. An employer can be verified. A human being cannot, and a badge
+        that implies otherwise encourages people to drop a guard they should keep.
+      </p>
+      <ul>
+        <li>Meet somewhere public, at least the first time.</li>
+        <li>Tell a trusted contact where you are going.</li>
+        <li>Leave whenever you want to. You never owe anyone an explanation for going.</li>
       </ul>
 
       <h2>Why level 2 gates the safety features</h2>

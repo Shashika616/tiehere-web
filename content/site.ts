@@ -1,6 +1,14 @@
 /**
  * One source of truth for everything the site claims about the product.
  *
+ * ONE RULE ABOUT THE WORD "VERIFIED": it may describe a credential, never a
+ * person. A phone number can be verified. An email can be verified. An
+ * employer can be verified. A human being cannot, because nothing the product
+ * checks says anything about how someone will behave, and a badge that
+ * implies otherwise makes people drop a guard they should keep. The app's own
+ * strings already get this right ("Phone verified", "Company email verified")
+ * and this site now matches them.
+ *
  * The intents below are copied verbatim from the app's own
  * `frontend/lib/core/models/intent_type.dart`. If a label or tagline changes
  * there, change it here, the site must never describe a product the app
@@ -12,7 +20,7 @@ export const BRAND = {
   domain: "tiehere.com",
   line: "Connect with who's here.",
   description:
-    "Verified professionals near you, meeting in person, around something specific. TieHere is not another feed. It is a small number of real meetings you actually show up to.",
+    "Professionals near you, meeting in person, around something specific. Nobody here is anonymous. TieHere is not another feed. It is a small number of real meetings you actually show up to.",
 };
 
 export type Intent = {
@@ -108,10 +116,10 @@ export const STEPS: Step[] = [
   },
   {
     n: "02",
-    title: "Verified people ask to join",
-    body: "Requests come from accounts that cleared the trust ladder. You see who they are before you answer, and you answer once.",
+    title: "Nobody here is anonymous",
+    body: "Requests come from accounts tied to a real phone, a real email and a real employer. You see who they are before you answer, and you answer once.",
     image: "/steps/step-2.jpg",
-    meta: "verified only",
+    meta: "no anonymous accounts",
   },
   {
     n: "03",
@@ -144,14 +152,14 @@ export const TRUST: Rung[] = [
   },
   {
     level: "2",
-    name: "Verified person",
+    name: "Identity checked",
     unlocks: "Safety features switch on: SOS, trusted contacts, the per-participant safety gate.",
     requires: "LinkedIn, phone, and a personal email, all three confirmed.",
   },
   {
     level: "3",
-    name: "Verified professional",
-    unlocks: "The meetups that only open to verified professionals.",
+    name: "Workplace checked",
+    unlocks: "The meetups that ask for a confirmed employer.",
     requires: "A confirmed work email and company, on top of everything at level 2.",
   },
 ];
@@ -207,8 +215,8 @@ export const FAQ: Faq[] = [
     a: "Below level 1, nobody: meetup locations are redacted entirely. Above it, viewers receive quantised coordinates, never your exact position. Your precise location is not something the app hands to other users at any trust level.",
   },
   {
-    q: "What does verification actually require?",
-    a: "Level 1 is just a real account. Level 2 asks for LinkedIn, a phone number and a personal email, and in return switches on the safety features. Level 3 adds a verified work email and company. You can stop at any rung, because each one is useful on its own.",
+    q: "What does TieHere actually check?",
+    a: "Level 1 is a real account. Level 2 confirms a LinkedIn profile, a phone number and a personal email, and switches on the safety features. Level 3 confirms a work email and employer. These are checks on credentials, not on character. They make an account traceable to a real person, which raises the cost of behaving badly. They are not a promise about how anyone will behave, and we would rather say so than let the word verified do work it cannot do.",
   },
   {
     q: "What happens if someone does not show up?",

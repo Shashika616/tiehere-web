@@ -28,8 +28,9 @@ export default function Hero() {
         <div className="mt-10 grid gap-10 md:mt-14 md:grid-cols-[1.1fr_1fr] md:items-end">
           <Rise delay={120}>
             <p className="t-lead max-w-[42ch]">
-              Verified professionals near you, meeting in person, around something specific.
-              Not a feed to scroll. A small number of real meetings you actually show up to.
+              Professionals near you, meeting in person, around something specific. Nobody
+              here is anonymous. Not a feed to scroll. A small number of real meetings you
+              actually show up to.
             </p>
           </Rise>
 

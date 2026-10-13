@@ -5,6 +5,8 @@ import SmoothScroll from "@/components/motion/SmoothScroll";
 import CinematicFilm from "@/components/motion/CinematicFilm";
 import Header from "@/components/ui/Header";
 import BrandFlight from "@/components/motion/BrandFlight";
+import SmoothAnchors from "@/components/motion/SmoothAnchors";
+import ScrollEntry from "@/components/motion/ScrollEntry";
 import Footer from "@/components/ui/Footer";
 import { BRAND } from "@/content/site";
 
@@ -56,7 +58,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
+        <ScrollEntry />
         <SmoothScroll />
+        <SmoothAnchors />
         <CinematicFilm />
         <Header />
         <BrandFlight />

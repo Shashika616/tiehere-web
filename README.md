@@ -68,6 +68,24 @@ the **horizontal** value of `focus` in `content/site.ts` has any effect.
 **When swapping images**, clear `.next/dev/cache/images` or the dev server keeps serving the old
 optimised derivatives under the same filenames.
 
+## The word "verified"
+
+**It may describe a credential. It may never describe a person.** A phone number can be verified.
+An email can be verified. An employer can be verified. A human being cannot, because nothing the
+product checks says anything about how someone will behave.
+
+This is not pedantry. A "verified" badge on a person is an implied safety guarantee the product
+cannot honour, and worse, it makes people drop a guard at exactly the moment they should keep it.
+The site now says `Identity checked` and `Workplace checked` instead of `Verified person` and
+`Verified professional`, and the safety chapter carries an explicit **What a check cannot do**
+block rather than leaving the reader to infer the limits.
+
+The app's own strings already got this right (`Phone verified`, `Company email verified`) in most
+places. Two of them do not, and they live in the product rather than the marketing, which is where
+the exposure actually is: **`GET VERIFIED`**, and the copy promising **"a verified badge other
+members can see"** plus **"shared with verified members"**. Those are outside this repo and were
+not changed.
+
 ## Deliberate decisions
 
 - **The safety chapter does not move.** No parallax, no pinning, no drift, and the only light
@@ -149,6 +167,59 @@ studio is; ours says where *you* are, because a place and a window are the only 
 product ever asks for. It is read from `Intl`, so it needs no permission, no network and no API,
 and the seconds are written to a text node through a ref rather than React state, which would
 re-render the subtree and force a style recalc once a second.
+
+## Where the page opens
+
+It opens on the hero, and that took taking scroll restoration over by hand. Two independent
+things were breaking it: the browser's `history.scrollRestoration` defaults to `auto`, so a reload
+returned you to wherever you had scrolled, and the anchor handler used to write the section into
+the URL, so any reload after clicking a nav tab opened on that tab and skipped the hero entirely.
+
+`components/motion/ScrollEntry.tsx` sets restoration to `manual` and decides the entry itself:
+
+| Entry | Lands on |
+|---|---|
+| Fresh load, or reload | The hero, always |
+| Reload after clicking a nav tab | The hero |
+| Pasted deep link (`/#safety`) | That section, offset for the header |
+| Back or forward | The position saved for that page |
+
+Switching restoration off alone was not enough, because then coming back from `/privacy` would
+dump you at the top of a nineteen-thousand-pixel page instead of where you were reading. The
+position is saved to `sessionStorage` on `pagehide` and restored only for a `back_forward`
+navigation.
+
+**Trade-off worth knowing:** clicking a nav tab no longer puts a `#section` in the URL, so you
+cannot copy the address bar to link someone to a section. Deep links still work if someone has
+one. `node scripts/check-scroll-entry.mjs` covers all seven cases.
+
+## In-page navigation
+
+Anchor clicks scroll smoothly, and neither path gave that for free: Lenis does not intercept
+anchor clicks, and this stylesheet sets `scroll-behavior: auto` deliberately so Lenis and the
+browser never drive the scroll at once. Every nav click was a hard jump.
+
+`components/motion/SmoothAnchors.tsx` is one delegated listener covering the header, the mobile
+overlay, the footer index and the bottom CTA bar. On pointer devices it hands the move to Lenis so
+the easing matches the rest of the site, with the duration scaled by distance so a short hop does
+not crawl and a full-document jump does not teleport. On touch, where Lenis is off by design, it
+falls back to native smooth scrolling. Under reduced motion it lands instantly.
+
+Four details that are easy to miss:
+
+- It offsets by the **measured** header height, not a guessed constant.
+- It scrolls to the target's **flow** position, so a pinned sticky section (the final CTA) still
+  resolves correctly instead of to wherever it happens to be stuck.
+- It releases the mobile overlay's body-scroll lock before measuring, rather than waiting for
+  React's effect, or the scroll goes nowhere.
+- It moves **focus** to the target. A scripted scroll does not do what a real anchor jump does, so
+  without this a keyboard user lands nowhere. The target is marked `data-scroll-target` purely to
+  suppress its focus ring: browsers will match `:focus-visible` on a scripted focus, and a 2px
+  outline around a full-bleed section renders as a stray blue line across the page. The suppression
+  is scoped to that one marker, so the skip link and every real control keep their indicator.
+
+Verified landing within a pixel of the header edge on both viewports, animating rather than
+teleporting, with the overlay closing and the URL and back button staying honest.
 
 ## Navigation states
 

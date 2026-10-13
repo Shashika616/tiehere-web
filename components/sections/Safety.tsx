@@ -2,7 +2,8 @@ import { SAFETY } from "@/content/site";
 import { RevealLines, Rise } from "@/components/ui/Reveal";
 
 /**
- * The still chapter.
+ * The still chapter, and the one that carries the site's most important
+ * admission: the trust ladder checks credentials, not character.
  *
  * The film's ground turns to paper here and the particles stop. Nothing on
  * this section parallaxes, pins, scrubs or drifts. After four screens of
@@ -41,10 +42,36 @@ export default function Safety() {
           ))}
         </div>
 
-        <p className="mt-20 max-w-[40ch] text-[0.9rem] leading-relaxed text-ink-900/50">
-          Safety features switch on at trust level 2, once LinkedIn, phone and personal email
-          are verified, because a safety net that anonymous accounts can pull is not a safety net.
-        </p>
+        {/* The most important honest statement on the site, so it gets the
+            weight of a heading rather than a footnote. A trust product that
+            lets "verified" imply a safety guarantee is not just overclaiming,
+            it is making people less careful at the exact moment they should
+            be most careful. */}
+        <div className="mt-24 border-t border-ink-900/15 pt-12">
+          <h3 className="t-h3 max-w-[20ch] !text-ink-900">What a check cannot do</h3>
+
+          <div className="mt-7 grid gap-8 md:grid-cols-2 md:gap-16">
+            <p className="max-w-[44ch] text-[1.05rem] leading-relaxed text-ink-900/75">
+              A checked account means a real phone, a real email and a real employer are
+              attached to it. It does not mean we have met this person. It does not tell you
+              how they will behave. No app can tell you that, and any app that implies it can
+              is selling you a feeling rather than a fact.
+            </p>
+            <p className="max-w-[44ch] text-[1.05rem] leading-relaxed text-ink-900/75">
+              What the checks do is make anonymity expensive. If something goes wrong there is
+              a real identity to find, and that is a deterrent, not a guarantee. Meet somewhere
+              public. Tell a trusted contact where you are going. Leave whenever you want to,
+              and you never owe anyone an explanation for going.
+            </p>
+          </div>
+
+          <p className="mt-12 max-w-[46ch] text-[0.9rem] leading-relaxed text-ink-900/50">
+            Safety features switch on at trust level 2, once LinkedIn, phone and personal email
+            are confirmed, because a safety net that anonymous accounts can pull is not a
+            safety net.
+          </p>
+        </div>
+
       </div>
     </section>
   );
