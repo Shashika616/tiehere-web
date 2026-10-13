@@ -3,14 +3,20 @@
 import Mark from "./Mark";
 import LocalClock from "./LocalClock";
 import StoreButtons from "./StoreButtons";
-import { BRAND } from "@/content/site";
+import { BRAND, LINKS } from "@/content/site";
+import { MailIcon, LinkedInIcon, InstagramIcon, XIcon } from "./SocialIcons";
 import { useInView } from "@/lib/useInView";
 
+// Root-relative, not bare fragments. The footer is on every page, and
+// "#how" from /privacy points at an element that does not exist there, so the
+// link simply did nothing. "/#how" navigates home and ScrollEntry honours the
+// hash on arrival.
 const PRODUCT = [
-  { href: "#how", label: "How it works" },
-  { href: "#intents", label: "Intents" },
-  { href: "#trust", label: "Trust levels" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#home", label: "Home" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#intents", label: "Intents" },
+  { href: "/#trust", label: "Trust levels" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 const LEGAL = [
@@ -20,13 +26,11 @@ const LEGAL = [
   { href: "/delete-account", label: "Delete your account" },
 ];
 
-// TODO before launch: real destinations. Until these accounts exist they are
-// placeholders, exactly like the store links, and are listed in the README.
 const REACH = [
-  { href: "#", label: "Email" },
-  { href: "#", label: "LinkedIn" },
-  { href: "#", label: "Instagram" },
-  { href: "#", label: "X" },
+  { label: "Email", href: LINKS.email && `mailto:${LINKS.email}`, Icon: MailIcon },
+  { label: "LinkedIn", href: LINKS.linkedin, Icon: LinkedInIcon },
+  { label: "Instagram", href: LINKS.instagram, Icon: InstagramIcon },
+  { label: "X", href: LINKS.x, Icon: XIcon },
 ];
 
 /**
@@ -106,23 +110,46 @@ export default function Footer() {
         <nav aria-label="Reach us">
           <p className="t-label mb-6">reach us</p>
           <ul className="border-t border-white/10">
-            {REACH.map((l) => (
-              <li key={l.label}>
-                <a href={l.href} className="foot-row">
-                  <span>{l.label}</span>
-                  <svg viewBox="0 0 16 16" aria-hidden="true" className="foot-row-arrow">
-                    <path
-                      d="M4 12 12 4M6 4h6v6"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </a>
-              </li>
-            ))}
+            {REACH.map((l) =>
+              l.href ? (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    className="foot-row"
+                    {...(l.href.startsWith("http")
+                      ? { target: "_blank", rel: "noopener noreferrer" }
+                      : {})}
+                  >
+                    <span className="flex items-center gap-3.5">
+                      <l.Icon className="foot-row-icon" tone="brand" />
+                      {l.label}
+                    </span>
+                    <svg viewBox="0 0 16 16" aria-hidden="true" className="foot-row-arrow">
+                      <path
+                        d="M4 12 12 4M6 4h6v6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </a>
+                </li>
+              ) : (
+                // No destination yet, so it is not a link. Rendering an anchor
+                // to "#" here is what made the footer feel broken.
+                <li key={l.label}>
+                  <span className="foot-row is-soon">
+                    <span className="flex items-center gap-3.5">
+                      <l.Icon className="foot-row-icon" tone="brand" />
+                      {l.label}
+                    </span>
+                    <span className="foot-soon">soon</span>
+                  </span>
+                </li>
+              ),
+            )}
           </ul>
         </nav>
       </div>

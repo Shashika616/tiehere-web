@@ -48,10 +48,25 @@ export default function SmoothAnchors() {
       const link = (e.target as HTMLElement | null)?.closest?.("a");
       if (!link) return;
 
-      const href = link.getAttribute("href");
-      if (!href || href === "#" || !href.startsWith("#")) return;
+      const raw = link.getAttribute("href");
+      if (!raw) return;
 
-      const target = document.getElementById(decodeURIComponent(href.slice(1)));
+      // Section links are root-relative ("/#trust"), not bare fragments, so
+      // that they also work from /privacy and the other text pages. That
+      // means deciding here whether this is a move within the current page or
+      // a real navigation: same origin and same path is a scroll, anything
+      // else is left to the browser.
+      let url: URL;
+      try {
+        url = new URL(raw, window.location.href);
+      } catch {
+        return;
+      }
+      if (url.origin !== window.location.origin) return;
+      if (url.pathname !== window.location.pathname) return;
+      if (!url.hash || url.hash === "#") return;
+
+      const target = document.getElementById(decodeURIComponent(url.hash.slice(1)));
       if (!target) return;
 
       e.preventDefault();

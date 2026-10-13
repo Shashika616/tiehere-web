@@ -15,6 +15,24 @@
  * does not ship.
  */
 
+/**
+ * Destinations that do not exist yet.
+ *
+ * Every one of these is empty on purpose, and every component that reads them
+ * renders a "soon" state rather than a link to "#". A control that looks like
+ * a link and does nothing when you click it is worse than no control: it reads
+ * as a broken site rather than an unfinished one. Fill these in and the same
+ * components become real links with no other change.
+ */
+export const LINKS = {
+  appStore: "",
+  playStore: "",
+  email: "",
+  linkedin: "",
+  instagram: "",
+  x: "",
+};
+
 export const BRAND = {
   name: "TieHere",
   domain: "tiehere.com",

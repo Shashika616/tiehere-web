@@ -30,7 +30,12 @@ await settle(); line("1. fresh load", await where(), "want hero");
 await p.reload({ waitUntil: "networkidle0" }); await settle();
 line("2. plain reload", await where(), "want hero");
 
-await p.evaluate(() => [...document.querySelectorAll('a[href="#how"]')].find(n => n.offsetParent !== null).click());
+// Section links are root-relative, so the selector is "/#how", not "#how".
+await p.evaluate(() => {
+  const a = [...document.querySelectorAll('a[href="/#how"]')].find((n) => n.offsetParent !== null);
+  if (!a) throw new Error('no visible link to /#how');
+  a.click();
+});
 await new Promise(r => setTimeout(r, 2200));
 const afterClick = await where();
 line("3. after clicking #how (should move)", afterClick, "want scrolled, no hash");

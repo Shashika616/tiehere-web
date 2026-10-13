@@ -237,14 +237,14 @@ html[data-film-light="1"] header[data-header] .t-nav {
 html[data-film-light="1"] header[data-header] .header-scrim {
   background: linear-gradient(to bottom, rgba(243, 246, 249, 0.92), rgba(243, 246, 249, 0));
 }
-html[data-film-light="1"] header[data-header] a[href="#get"] {
+html[data-film-light="1"] header[data-header] a[href="/#get"] {
   background: #0f1318;
   color: #ffffff;
 }
 header[data-header],
 header[data-header] .t-nav,
 header[data-header] .header-scrim,
-header[data-header] a[href="#get"] {
+header[data-header] a[href="/#get"] {
   transition:
     color 450ms var(--ease-out-soft),
     background 450ms var(--ease-out-soft),
@@ -635,4 +635,40 @@ main:has([data-cta-travel]) + footer {
   main:has([data-cta-travel]) + footer {
     margin-top: 0;
   }
+}
+
+/* A row with no destination yet. It keeps its place in the list so the shape
+   of the footer does not change when the accounts exist, but it is not an
+   anchor, does not take focus, and says plainly that it is not ready. */
+.foot-row.is-soon {
+  color: rgba(255, 255, 255, 0.4);
+  cursor: default;
+}
+.foot-soon {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.09em;
+  color: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+}
+
+/* One size for the contact glyphs so the rail reads as a set. They carry
+   their own brand colours, so the rest state is held back with opacity rather
+   than by recolouring them, and the hover brings them fully up. */
+.foot-row-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  opacity: 0.78;
+  transition: opacity 200ms var(--ease-out-soft);
+}
+.foot-row:hover .foot-row-icon,
+.foot-row:focus-visible .foot-row-icon {
+  opacity: 1;
+}
+.foot-row.is-soon .foot-row-icon {
+  opacity: 0.5;
 }

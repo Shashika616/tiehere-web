@@ -14,6 +14,9 @@ export type Formation = {
   thin: number;
   /** Drift amplitude multiplier. 0 = dead still. */
   life: number;
+  /** Particle radius multiplier. Cheaper than more particles when a chapter
+   *  needs to read as solid rather than as a dusting. Defaults to 1. */
+  weight?: number;
 };
 
 const TAU = Math.PI * 2;
@@ -181,49 +184,119 @@ const settle: Formation = {
 };
 
 /**
- * CHAPTER 7, the tie.
- * Every particle lands on the lemniscate the mark is built from: one lobe
- * blue, one lobe green, two heads above. The whole scroll has been walking
- * toward this shape.
+ * The mark, as particles. Shared by the opening chapter and the finale so the
+ * two cannot drift apart.
+ *
+ * Proportions come from the drawn logo rather than from eyeballing: there, the
+ * heads sit at about 63% of the knot's half-width and a little above its top,
+ * and each head's radius is about 15% of the knot's full width. Built to those
+ * numbers it reads as the mark; built by eye it reads as an infinity symbol
+ * with two specks over it.
+ *
+ * A bare lemniscate is only 0.35 tall against 1.0 wide, so jitter thick enough
+ * to look like a rope is half the curve's own height and smears the loops
+ * shut. Stretching it vertically first gives the jitter somewhere to live.
+ */
+const MARK_Y_STRETCH = 1.55;
+const MARK_JITTER = 0.1;
+/** Of the particles on the mark, the share forming the two heads. At a tenth
+ *  they were too sparse to resolve at any size. */
+const HEAD_SHARE = 0.24;
+/** Of all particles, the share held back to fill the frame around the shape. */
+const AMBIENT_SHARE = 0.3;
+
+type MarkOpts = { scale: number; dx: number; dy: number };
+
+function placeMark(i: number, n: number, o: Vec, k: MarkOpts) {
+  const onMark = Math.floor(n * (1 - AMBIENT_SHARE));
+
+  if (i >= onMark) {
+    // A bold shape in an otherwise empty frame reads as a shape floating in
+    // a void, so a third of the particles stay behind to fill it.
+    o.x = (rand(i + 211) - 0.5) * 3.7;
+    o.y = (rand(i + 307) - 0.5) * 2.3;
+    o.z = (rand(i + 401) - 0.5) * 2;
+    return;
+  }
+
+  const heads = Math.floor(onMark * HEAD_SHARE);
+  const S = k.scale;
+
+  if (i < heads) {
+    const left = i % 2 === 0;
+    const a = rand(i + 2) * TAU;
+    const r = Math.sqrt(rand(i + 4)) * 0.3;
+    o.x = ((left ? -0.85 : 0.8) + Math.cos(a) * r) * S + k.dx;
+    o.y = (-0.95 + Math.sin(a) * r) * S + k.dy;
+    o.z = (rand(i + 6) - 0.5) * 0.3;
+    return;
+  }
+
+  const t = ((i - heads) / Math.max(1, onMark - heads)) * TAU;
+  const d = 1 + Math.sin(t) * Math.sin(t);
+  const nx = Math.cos(t) / d;
+  const ny = ((Math.sin(t) * Math.cos(t)) / d) * MARK_Y_STRETCH;
+
+  // A disc of jitter around the curve is what turns a line into a rope.
+  const a = rand(i + 15) * TAU;
+  const r = Math.sqrt(rand(i + 23)) * MARK_JITTER;
+
+  o.x = (nx * 1.32 + Math.cos(a) * r) * S + k.dx;
+  o.y = (ny * 1.32 + Math.sin(a) * r) * S + k.dy + 0.18 * S;
+  o.z = (rand(i + 31) - 0.5) * 0.55;
+}
+
+function markColor(i: number, n: number): RGB {
+  const onMark = Math.floor(n * (1 - AMBIENT_SHARE));
+  if (i >= onMark) return rand(i + 77) > 0.8 ? GREY : [146, 156, 168];
+
+  const heads = Math.floor(onMark * HEAD_SHARE);
+  if (i < heads) return i % 2 === 0 ? BLUE : GREEN;
+
+  // By which lobe, not how far along the path: the lemniscate crosses its own
+  // centre, so splitting the parameter in half gives two bicoloured loops.
+  const t = ((i - heads) / Math.max(1, onMark - heads)) * TAU;
+  return Math.cos(t) < 0 ? BLUE : GREEN;
+}
+
+/**
+ * Where the opening mark sits. The hero's free space is not in the same place
+ * on every viewport, so the film sets this on allocate and on resize.
+ */
+export const markLayout = { x: 0.08, y: -0.1, scale: 0.8 };
+
+/**
+ * CHAPTER 0 - the mark.
+ * The film opens on it and disperses it within the first half-screen, which
+ * makes the finale a return rather than a reveal.
+ */
+const mark: Formation = {
+  place: (i, n, o) =>
+    placeMark(i, n, o, { scale: markLayout.scale, dx: markLayout.x, dy: markLayout.y }),
+  color: markColor,
+  bg: INK,
+  thin: 0.04,
+  life: 0.5,
+  // Heavier bodies rather than more of them: radius is free, count is not.
+  weight: 1.75,
+};
+
+/**
+ * CHAPTER 7 - the tie.
+ * The same mark, centred and at full size. Every particle has been walking
+ * back toward this shape since the first screen.
  */
 const knot: Formation = {
-  place: (i, n, o) => {
-    const headCount = Math.floor(n * 0.07);
-
-    if (i < headCount) {
-      // The two dots above the knot, as on the mark.
-      const left = i % 2 === 0;
-      const a = rand(i + 2) * TAU;
-      const r = Math.sqrt(rand(i + 4)) * 0.17;
-      o.x = (left ? -0.46 : 0.42) + Math.cos(a) * r;
-      o.y = -0.72 + Math.sin(a) * r;
-      o.z = (rand(i + 6) - 0.5) * 0.12;
-      return;
-    }
-
-    const k = (i - headCount) / Math.max(1, n - headCount);
-    const t = k * TAU;
-    const d = 1 + Math.sin(t) * Math.sin(t);
-    const thickness = (rand(i + 15) - 0.5) * 0.12;
-    const nx = Math.cos(t) / d;
-    const ny = (Math.sin(t) * Math.cos(t)) / d;
-
-    o.x = nx * 1.32 + thickness * 0.5;
-    o.y = ny * 1.32 + thickness + 0.18;
-    o.z = (rand(i + 21) - 0.5) * 0.22;
-  },
-  color: (i, n) => {
-    const headCount = Math.floor(n * 0.07);
-    if (i < headCount) return i % 2 === 0 ? BLUE : GREEN;
-    const k = (i - headCount) / Math.max(1, n - headCount);
-    return k < 0.5 ? BLUE : GREEN;
-  },
+  place: (i, n, o) => placeMark(i, n, o, { scale: 0.92, dx: 0, dy: -0.04 }),
+  color: markColor,
   bg: INK,
   thin: 0.03,
   life: 0.3,
+  weight: 1.75,
 };
 
 export const FORMATIONS: Record<string, Formation> = {
+  mark,
   cloud,
   sparse,
   city,

@@ -25,14 +25,52 @@ the words. Sections *without* the attribute are deliberate cross-dissolves betwe
 
 | Formation | Section | What it shows |
 |---|---|---|
-| `cloud` | Hero | A thousand people, scattered, drifting |
+| `mark` | Hero, at rest | The particles **are** the TieHere mark |
+| `cloud` | Hero, on scroll | A thousand people, scattered, drifting |
 | `sparse` | Problem | 85% thrown out of frame, the forty you actually met |
 | `city` | Proximity | The cloud falls onto a ground plane: a city at a low angle |
 | `fan` | Intents | Seven arms from one centre, one per intent |
 | `ladder` | Trust | Four bands, grey at the bottom, green at the top |
 | `quiet` | Safety | Ground turns to paper, particles stop |
 | `settle` | FAQ | Back to dark before the questions start |
-| `knot` | Final CTA | Every particle lands on the mark's lemniscate |
+| `knot` | Final CTA | Every particle returns to the mark's lemniscate |
+
+The film opens on the mark and disperses it into the crowd within the first half-screen, which
+makes the finale a **return** rather than a first reveal and bookends the whole scroll. It needs
+two anchors rather than one attribute on the hero, because a section's centre resolves to a single
+point and a chapter needs somewhere to travel between.
+
+It is built as a **rope, not a wire**: each particle is thrown into a disc around the curve so the
+shape has body, it spans the hero rather than tucking into a corner, and roughly three particles
+in ten are held back as a grey ambient field, because a bold shape in an otherwise empty frame
+reads as a shape floating in a void.
+
+Two things had to be got right, and neither was obvious from looking at screenshots:
+
+- **A bare lemniscate is only 0.35 tall against 1.0 wide.** Jitter thick enough to read as a rope
+  was half the curve's own height, which smeared the loops shut and produced a featureless blob.
+  The shape is stretched vertically (`MARK_Y_STRETCH`) first, which lands it near the logo's own
+  2:1 and gives the jitter somewhere to live. Plotting the point cloud as ASCII in a scratch script
+  found this in one pass after two rounds of guessing at screenshots had failed.
+- **Colour is decided by which lobe a point is on**, not how far along the path it is. The
+  lemniscate crosses its own centre, so splitting the parameter in half gave two bicoloured loops
+  instead of the blue figure and the green one the mark is made of.
+
+The opening chapter and the finale now share **one** definition (`placeMark` / `markColor`), so
+they cannot drift apart: the finale is literally the same shape, centred and at full size.
+
+Two numbers come from the drawn logo rather than from eyeballing: the heads sit at about 63% of
+the knot's half-width and a little above its top, and each head's radius is about 15% of the
+knot's full width. They also need about a quarter of the mark's particles; at a tenth they were
+too sparse to resolve at any size, and the shape read as an infinity symbol with two specks over
+it. The whole mark then has to hang low enough that the heads clear the fixed header instead of
+being cropped off the top of the frame.
+
+Density comes from `weight` on the formation, a particle-radius multiplier, rather than from
+raising the global count: radius is free where particle count is not.
+
+Placement is per-viewport (`markLayout`, set on allocate and resize). Past about 0.85 scale on a
+wide screen the lobes fall off both edges and all that is left is the diffuse middle.
 
 ## Imagery
 
@@ -102,8 +140,19 @@ not changed.
 - **No eyebrows above headings, anywhere.** Every heading carries itself. The hero had a pill
   reading "professional meetups, in person"; it was deleted rather than restyled.
 - **No em dashes in any copy.**
-- **Store marks are authored SVG**, not bitmap badges or glyphs, so they stay crisp and inherit
-  `currentColor`. Confirm the lockups against Apple's and Google's badge guidelines before launch.
+- **Every icon is authored SVG**, not a bitmap badge or a unicode glyph: the store marks, and the
+  contact rail's mail, LinkedIn, Instagram and X glyphs in `components/ui/SocialIcons.tsx`. All sit
+  on a shared 24x24 grid, filled rather than stroked. The envelope is drawn to the same optical
+  weight as the three brand marks, because a hairline outline next to three solid logos reads as a
+  mistake at that size.
+- **Brand marks keep their own colours**, which is the one place the two-colour rule gives way: a
+  brand mark recoloured is no longer that brand's mark, and the four-colour Google Play glyph
+  already set the precedent. LinkedIn `#0A66C2`, Instagram its radial gradient, X in white because
+  its black would be invisible on this ground. Email has no owner, so it takes TieHere blue: our
+  channel in our colour, their platforms in theirs. The rest state is held back with opacity
+  rather than by desaturating them, so nothing is recoloured to fit. `tone="mono"` remains the
+  default for any other use, so the rest of the site stays inside the palette. Confirm the store
+  lockups against Apple's and Google's badge guidelines before launch.
 
 ## The brand flight
 
@@ -199,6 +248,23 @@ navigation.
 **Trade-off worth knowing:** clicking a nav tab no longer puts a `#section` in the URL, so you
 cannot copy the address bar to link someone to a section. Deep links still work if someone has
 one. `node scripts/check-scroll-entry.mjs` covers all seven cases.
+
+## Section links are root-relative
+
+Every section link is **`/#home`, not `#home`**. The header and footer appear on every page, and a
+bare fragment from `/privacy` points at an element that does not exist there, so the link did
+nothing at all. That was the real defect behind "the footer doesn't go anywhere": the legal links
+had real URLs, the section links had none.
+
+Root-relative means one href works from everywhere. `SmoothAnchors` decides which behaviour
+applies by comparing origin and pathname: same page is a smooth scroll, anything else is left to
+the browser, and `ScrollEntry` honours the hash on arrival.
+
+The hero carries `id="home"`, so it is addressable like every other section, and the lockup in the
+top-left points at it the way any site's logo should.
+
+Verified from `/`, `/privacy` and `/safety`: header links, footer links and the logo all land on
+the right section.
 
 ## In-page navigation
 
@@ -315,9 +381,20 @@ backdrop blur went from 24px to 12px behind a slightly more opaque ground.
 Currently **185 KB gz** of JS for the whole site (budget: 220 KB). Runtime dependencies are
 `lenis`, `next`, `react`, `react-dom`: that is the entire list.
 
+## Destinations that do not exist yet
+
+`LINKS` in `content/site.ts` holds the store listings, the contact address and the social
+accounts. Every one is an empty string, and **every component that reads them renders a "soon"
+state rather than an anchor to `#`**. A control that looks like a link and does nothing when
+clicked reads as a broken site rather than an unreleased one, and on a primary call to action it
+is the most damaging dead control on the page.
+
+Fill those six strings in and the same components become real links with no other change. Nothing
+else needs touching.
+
 ## Before launch
 
-- [ ] Real store links in `components/ui/StoreButtons.tsx` (currently `href="#"`)
+- [ ] Real store listings, contact address and socials in `LINKS` (`content/site.ts`)
 - [ ] Legal review of `/privacy`, `/terms`, `/delete-account`, each has `TODO` markers
 - [ ] Support/privacy contact addresses (same `TODO` markers)
 - [ ] `generateMetadata` OG image, deep links / Universal Links, analytics

@@ -5,10 +5,28 @@ import StoreButtons from "@/components/ui/StoreButtons";
 export default function Hero() {
   return (
     <section
-      id="top"
-      data-film="cloud"
+      id="home"
       className="relative flex min-h-[100svh] flex-col justify-between pb-24 pt-28 md:pb-32 md:pt-32"
     >
+      {/* The film opens on the mark and disperses into the crowd.
+          Two markers rather than one attribute on the section, because the
+          section's own centre resolves to a single point and a chapter needs
+          somewhere to travel between. The first sits at the top of the hero,
+          so at rest the particles ARE the mark; the second at the bottom, so
+          the first half-screen of scroll scatters them.
+          This also turns the knot at the final CTA into a return rather than
+          a first reveal, which is the better shape for the whole film. */}
+      <span
+        data-film="mark"
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-0 h-0 w-0"
+      />
+      <span
+        data-film="cloud"
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 h-0 w-0"
+      />
+
       <div className="shell w-full">
         <Lockup id="hero-lockup" variant="hero" />
       </div>

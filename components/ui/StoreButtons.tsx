@@ -1,9 +1,18 @@
+import { LINKS } from "@/content/site";
+
 /**
  * Store CTAs. The marks are authored SVG, not glyphs or bitmap badges, so they
  * stay crisp at any size and inherit currentColor.
  *
- * TODO before launch: swap `href="#"` for the real listings, and confirm the
- * lockups against Apple's and Google's current badge guidelines.
+ * Until `LINKS.appStore` and `LINKS.playStore` are filled in, these are not
+ * anchors. They keep their shape and say "soon" instead, because a primary
+ * call to action that does nothing when you click it is the single most
+ * damaging dead control on a page: it reads as a broken site rather than an
+ * unreleased one. Paste the listings into `content/site.ts` and they become
+ * real links with no other change.
+ *
+ * TODO before launch: confirm the lockups against Apple's and Google's current
+ * badge guidelines.
  */
 
 function AppleMark({ className = "" }: { className?: string }) {
@@ -30,23 +39,17 @@ function Badge({
   store,
   sub,
   icon,
+  href,
   invert = false,
 }: {
   store: string;
   sub: string;
   icon: React.ReactNode;
+  href?: string;
   invert?: boolean;
 }) {
-  return (
-    <a
-      href="#"
-      aria-label={`${sub} ${store}`}
-      className={
-        invert
-          ? "group inline-flex items-center gap-3 rounded-xl bg-white px-5 py-3 text-ink-900 transition-transform duration-150 ease-out hover:scale-[1.02] active:scale-[0.98]"
-          : "group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/[0.06] px-5 py-3 backdrop-blur-md transition-all duration-200 hover:border-white/40 hover:bg-white/[0.11] active:scale-[0.98]"
-      }
-    >
+  const inner = (
+    <>
       <span className="shrink-0">{icon}</span>
       <span className="text-left leading-tight">
         <span
@@ -58,6 +61,36 @@ function Badge({
         </span>
         <span className="block text-[0.95rem] font-medium tracking-tight">{store}</span>
       </span>
+    </>
+  );
+
+  if (!href) {
+    return (
+      <span
+        className="inline-flex cursor-default items-center gap-3 rounded-xl border border-white/12 bg-white/[0.03] px-5 py-3 text-white/55"
+        aria-label={`${store}, coming soon`}
+      >
+        {inner}
+        <span className="ml-1 shrink-0 rounded-full border border-white/12 px-2 py-0.5 font-mono text-[0.625rem] tracking-[0.09em] text-white/35">
+          soon
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${sub} ${store}`}
+      className={
+        invert
+          ? "group inline-flex items-center gap-3 rounded-xl bg-white px-5 py-3 text-ink-900 transition-transform duration-150 ease-out hover:scale-[1.02] active:scale-[0.98]"
+          : "group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/[0.06] px-5 py-3 backdrop-blur-md transition-all duration-200 hover:border-white/40 hover:bg-white/[0.11] active:scale-[0.98]"
+      }
+    >
+      {inner}
     </a>
   );
 }
@@ -68,12 +101,14 @@ export default function StoreButtons({ invert = false }: { invert?: boolean }) {
       <Badge
         store="App Store"
         sub="Download on the"
+        href={LINKS.appStore || undefined}
         invert={invert}
         icon={<AppleMark className="h-6 w-6" />}
       />
       <Badge
         store="Google Play"
         sub="Get it on"
+        href={LINKS.playStore || undefined}
         invert={invert}
         icon={<PlayMark className="h-5 w-5" />}
       />

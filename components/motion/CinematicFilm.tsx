@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { FORMATIONS, DEFAULT_FORMATION, type Vec, type RGB } from "@/lib/formations";
+import { FORMATIONS, DEFAULT_FORMATION, markLayout, type Vec, type RGB } from "@/lib/formations";
 import { scrollState, clamp, lerp, smoothstep, rand } from "@/lib/scroll";
 import { onTick, ORDER } from "@/lib/ticker";
 
@@ -82,7 +82,28 @@ export default function CinematicFilm() {
     let bloomRadius = 0;
 
     const allocate = () => {
-      count = mqSmall.matches ? 440 : 860;
+      // The hero's empty space moves with the viewport: the headline owns the
+      // left on a wide screen and the bottom on a phone.
+      // The mark fills the hero rather than sitting in a corner. It bleeds off
+      // the sides on a phone, which is what a background should do.
+      // Sized so the loops are inside the frame. Past about 0.85 the lobes
+      // fall off both edges and all that is left on screen is the diffuse
+      // middle, which reads as noise rather than as the mark.
+      // The heads sit roughly a full radius above the loops, so the whole
+      // shape has to hang low enough that they clear the header instead of
+      // being cropped off the top of the frame.
+      if (mqSmall.matches) {
+        markLayout.x = 0;
+        markLayout.y = -0.2;
+        markLayout.scale = 0.6;
+      } else {
+        markLayout.x = 0.08;
+        markLayout.y = 0.18;
+        markLayout.scale = 0.8;
+      }
+
+      // Denser, because a rope and an ambient field both need bodies.
+      count = mqSmall.matches ? 700 : 1400;
       const f = () => new Float32Array(count);
       ax = f(); ay = f(); az = f();
       bx = f(); by = f(); bz = f();
@@ -259,6 +280,7 @@ export default function CinematicFilm() {
 
       const thin = lerp(FA.thin, FB.thin, t);
       const life = reduced ? 0 : lerp(FA.life, FB.life, t);
+      const weight = lerp(FA.weight ?? 1, FB.weight ?? 1, t);
 
       /* --- ground --- */
       const gr = lerp(FA.bg[0], FB.bg[0], t);
@@ -323,7 +345,7 @@ export default function CinematicFilm() {
 
         sx[visible] = px;
         sy[visible] = py;
-        sr[visible] = sizeSeed[i] * (0.75 + depth * 1.45);
+        sr[visible] = sizeSeed[i] * (0.75 + depth * 1.45) * weight;
         const bucket = pairOf[i] * ALPHA_STEPS + step;
         sBucket[visible] = bucket;
         bucketFill[bucket]++;

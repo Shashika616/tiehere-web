@@ -26,11 +26,11 @@ export default function Header() {
   // between them (a photographic chapter, say) the last one stays lit, which
   // is what a reader expects from a progress indicator.
   useEffect(() => {
-    const ids = ["how", "trust", "safety", "faq"];
+    const ids = ["home", "how", "trust", "safety", "faq"];
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting) setCurrent("#" + e.target.id);
+          if (e.isIntersecting) setCurrent("/#" + e.target.id);
         }
       },
       { rootMargin: "-45% 0px -45% 0px", threshold: 0 },
@@ -64,10 +64,11 @@ export default function Header() {
   }, [menu]);
 
   const links = [
-    { href: "#how", label: "How it works" },
-    { href: "#trust", label: "Trust" },
-    { href: "#safety", label: "Safety" },
-    { href: "#faq", label: "FAQ" },
+    { href: "/#home", label: "Home" },
+    { href: "/#how", label: "How it works" },
+    { href: "/#trust", label: "Trust" },
+    { href: "/#safety", label: "Safety" },
+    { href: "/#faq", label: "FAQ" },
   ];
 
   return (
@@ -89,11 +90,11 @@ export default function Header() {
         />
 
         <div className="shell relative flex h-16 items-center justify-between md:h-20">
-          <a href="#top" aria-label="TieHere, home" className="group inline-flex">
+          <a href="/#home" aria-label="TieHere, home" className="group inline-flex">
             <Lockup id="nav-lockup" />
           </a>
 
-          <nav className="hidden items-center gap-9 md:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-7 md:flex lg:gap-9" aria-label="Primary">
             {links.map((l) => (
               <a
                 key={l.href}
@@ -106,7 +107,7 @@ export default function Header() {
               </a>
             ))}
             <a
-              href="#get"
+              href="/#get"
               className="rounded-full bg-white px-5 py-2.5 text-[0.875rem] font-medium tracking-tight text-ink-900 transition-transform duration-150 ease-out hover:scale-[1.03] active:scale-[0.97]"
             >
               Get the app
@@ -170,7 +171,7 @@ export default function Header() {
         }`}
       >
         <a
-          href="#get"
+          href="/#get"
           className="flex h-13 w-full items-center justify-center rounded-full bg-white py-3.5 text-[0.95rem] font-medium tracking-tight text-ink-900 transition-transform duration-150 ease-out active:scale-[0.98]"
         >
           Get TieHere
