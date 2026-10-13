@@ -430,6 +430,12 @@ export default function CinematicFilm() {
     const ro = new ResizeObserver(remeasure);
     ro.observe(document.body);
 
+    const onResume = () => {
+      if (!document.hidden) remeasure();
+    };
+    document.addEventListener("visibilitychange", onResume);
+    window.addEventListener("pageshow", onResume);
+
     const settle = window.setTimeout(measureAnchors, 600);
     const settle2 = window.setTimeout(measureAnchors, 1800);
 
@@ -452,6 +458,8 @@ export default function CinematicFilm() {
       stop();
       themeWatch.disconnect();
       ro.disconnect();
+      document.removeEventListener("visibilitychange", onResume);
+      window.removeEventListener("pageshow", onResume);
       if (pending) cancelAnimationFrame(pending);
       window.clearTimeout(settle);
       window.clearTimeout(settle2);

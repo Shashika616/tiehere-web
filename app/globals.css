@@ -474,6 +474,32 @@ html[data-brand-flight="1"] #hero-lockup {
 html[data-brand-flight="pending"] #nav-lockup {
   opacity: 0;
 }
+
+/* ---- When there is no flight ----
+   Under reduced motion the lockup does not travel, and the fallback showed
+   the hero copy and the nav copy at once: the brand twice on one screen,
+   which reads as a duplicate rather than as a fallback. The nav copy now
+   simply waits until the hero has scrolled away. A plain opacity change, no
+   travel, which is what reduced motion asks for rather than nothing at all. */
+html[data-brand-flight="0"] #nav-lockup {
+  opacity: 0;
+  transition: opacity 260ms linear;
+}
+html[data-brand-flight="0"] header[data-header][data-stuck] #nav-lockup {
+  opacity: 1;
+}
+
+/* Nothing from the page floats over the open menu. */
+html[data-menu="open"] [data-brand-flyer] {
+  opacity: 0 !important;
+}
+
+/* The mobile menu takes the page's own ground so the type on it reads from
+   the same tokens. It was pinned to ink, which left black headings on a dark
+   sheet in the light theme. */
+.mobile-menu {
+  background: color-mix(in srgb, var(--color-bg) 95%, transparent);
+}
 html[data-brand-flight="1"] #nav-lockup {
   transition: opacity 180ms linear;
 }

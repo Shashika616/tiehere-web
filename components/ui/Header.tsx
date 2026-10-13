@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Lockup from "./Lockup";
 import ThemeToggle from "./ThemeToggle";
 
@@ -14,6 +14,29 @@ export default function Header() {
   const [menu, setMenu] = useState(false);
   const [atEnd, setAtEnd] = useState(false);
   const [current, setCurrent] = useState<string | null>(null);
+  const bar = useRef<HTMLElement>(null);
+
+  // Safari drops the rasterised contents of a backdrop-filter layer when a
+  // tab is suspended, and does not always repaint it on resume: the bar comes
+  // back with the lockup missing. Chromium does not do this. Nudging the
+  // layer's transform forces it to re-rasterise, and clearing it on the next
+  // frame leaves nothing behind.
+  useEffect(() => {
+    const nudge = () => {
+      const el = bar.current;
+      if (!el || document.hidden) return;
+      el.style.transform = "translateZ(0)";
+      requestAnimationFrame(() => {
+        if (bar.current) bar.current.style.transform = "";
+      });
+    };
+    document.addEventListener("visibilitychange", nudge);
+    window.addEventListener("pageshow", nudge);
+    return () => {
+      document.removeEventListener("visibilitychange", nudge);
+      window.removeEventListener("pageshow", nudge);
+    };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > window.innerHeight * 0.75);
@@ -59,8 +82,13 @@ export default function Header() {
 
   useEffect(() => {
     document.body.style.overflow = menu ? "hidden" : "";
+    // The flying lockup is fixed and sits above the menu's layer, so it has
+    // to be told to get out of the way rather than fought with z-index.
+    if (menu) document.documentElement.dataset.menu = "open";
+    else delete document.documentElement.dataset.menu;
     return () => {
       document.body.style.overflow = "";
+      delete document.documentElement.dataset.menu;
     };
   }, [menu]);
 
@@ -75,8 +103,10 @@ export default function Header() {
   return (
     <>
       <header
+        ref={bar}
         className="fixed inset-x-0 top-0 z-50"
         data-header
+        data-stuck={stuck ? "" : undefined}
       >
         {/* The chrome has no edge. Both the blur and the tint are masked out
             toward the bottom, so the bar fades into whatever it is over
@@ -136,7 +166,7 @@ export default function Header() {
 
       {/* Mobile overlay: staggered line reveal, full screen. */}
       <div
-        className={`fixed inset-0 z-40 bg-ink-900/95 backdrop-blur-2xl transition-opacity duration-400 md:hidden ${
+        className={`mobile-menu fixed inset-0 z-40 backdrop-blur-2xl transition-opacity duration-400 md:hidden ${
           menu ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
       >

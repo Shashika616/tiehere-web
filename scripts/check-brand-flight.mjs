@@ -71,4 +71,20 @@ const flashed = await p2.evaluate(() => {
 });
 console.log(flashed ? "FAIL: nav lockup flashes in then out on load" : "PASS: no lockup flash on first paint");
 
+
+// --- no flight: the brand must not appear twice on one screen ---
+const p3 = await b.newPage();
+await p3.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
+await p3.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
+await p3.goto("http://localhost:4321/", { waitUntil: "networkidle0", timeout: 60000 });
+await new Promise((r) => setTimeout(r, 2500));
+const both = await p3.evaluate(() => {
+  const o = (sel) => {
+    const n = document.querySelector(sel);
+    return n ? Number(getComputedStyle(n).opacity) : 0;
+  };
+  return o("#nav-lockup") > 0.5 && o("#hero-lockup") > 0.5;
+});
+console.log(both ? "FAIL: both lockups visible under reduced motion" : "PASS: one lockup under reduced motion");
+
 await b.close();

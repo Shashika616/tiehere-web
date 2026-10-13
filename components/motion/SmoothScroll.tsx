@@ -81,6 +81,12 @@ export default function SmoothScroll() {
       readProgress();
     };
     window.addEventListener("resize", onResize);
+    // A tab that was suspended can come back with a different extent.
+    const onResume = () => {
+      if (!document.hidden) onResize();
+    };
+    document.addEventListener("visibilitychange", onResume);
+    window.addEventListener("pageshow", onResume);
 
     const stop = onTick({
       order: ORDER.scroll,
@@ -95,6 +101,8 @@ export default function SmoothScroll() {
       ro.disconnect();
       if (pending) cancelAnimationFrame(pending);
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onResume);
+      window.removeEventListener("pageshow", onResume);
       lenis.destroy();
       delete (window as unknown as { lenis?: Lenis }).lenis;
     };

@@ -106,6 +106,18 @@ export default function BrandFlight() {
     };
     window.addEventListener("resize", onResize);
 
+    // Coming back to a suspended tab is not a resize, but everything this
+    // depends on may have moved while the page was frozen, and the per-frame
+    // dedupe means a stale value would simply persist. Safari suspends
+    // background tabs hard enough that the lockup came back missing. Both
+    // events re-measure and force the next frame to recompute from scratch.
+    const onResume = () => {
+      if (document.hidden) return;
+      onResize();
+    };
+    document.addEventListener("visibilitychange", onResume);
+    window.addEventListener("pageshow", onResume);
+
     // The lockup is measured in pixels, so it has to be measured in the real
     // typeface. next/font swaps, and a measurement taken against the fallback
     // gives a wrong scale ratio: the flight would then land at a size the nav
@@ -116,6 +128,8 @@ export default function BrandFlight() {
     return () => {
       stop();
       window.clearTimeout(settle);
+      document.removeEventListener("visibilitychange", onResume);
+      window.removeEventListener("pageshow", onResume);
       window.removeEventListener("resize", onResize);
       navEl.style.opacity = "";
     };
@@ -128,6 +142,7 @@ export default function BrandFlight() {
   return (
     <div
       ref={flyer}
+      data-brand-flyer=""
       aria-hidden="true"
       className={`pointer-events-none fixed left-0 top-0 z-[60] origin-top-left will-change-transform ${
         active ? "" : "hidden"

@@ -174,6 +174,11 @@ flashes on load. Four things took measuring:
   of the page. Fast scrolling skipped straight past it, so it only appeared when scrolling slowly.
 - `(1 - 0.9) / 0.1` is `0.9999999999999998`, so the "landed, remove the flyer" branch needs a
   tolerance rather than an exact `>= 1`, or it never fires.
+- **Under reduced motion there is no flight**, and the first fallback showed the hero copy and the
+  nav copy at once: the brand twice on one screen, which reads as a duplicate rather than as a
+  fallback. The nav copy now waits until the hero has scrolled away, as a plain opacity change
+  with no travel. Worth remembering that this path is what a reviewer with macOS "Reduce motion"
+  switched on actually sees, so it is in the regression check.
 - The nav lockup belongs to the flight **from the first frame**. Hiding it in the component's
   effect meant the server HTML painted it at full opacity for ~280ms before it disappeared, which
   was plainly visible on a phone, where there is no large hero lockup to draw the eye away. An
@@ -422,6 +427,24 @@ Also: style writes are guarded so an unchanged frame costs no recalc; the card t
 translucent gradient rather than `mix-blend-mode`, because a blend group on each of seven cards
 is something the compositor re-resolves every frame while the track scrubs; and the header's
 backdrop blur went from 24px to 12px behind a slightly more opaque ground.
+
+## Coming back to a suspended tab
+
+Safari suspends background tabs much harder than Chromium, and two things broke on resume that
+Chromium never showed:
+
+- **Stale state.** Everything scroll-driven dedupes per frame, so a value that was correct when
+  the tab froze simply persisted. `BrandFlight`, `SmoothScroll` and the film now re-measure and
+  force a recompute on `visibilitychange` and `pageshow`, because the page's extent and the
+  elements' positions can both have moved while it was frozen.
+- **A dropped layer.** Safari discards the rasterised contents of a `backdrop-filter` layer and
+  does not reliably repaint it, so the bar returned with the lockup missing. The header nudges its
+  own transform on resume and clears it the next frame, which forces a re-rasterise and leaves
+  nothing behind.
+
+Neither reproduces in Chromium, including with `visibilitychange` and `pageshow` driven by hand,
+so these are reasoned fixes for a browser the local tooling cannot drive. Worth re-testing in
+Safari specifically.
 
 ## Measuring paint, not just script
 
