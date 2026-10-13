@@ -5,6 +5,7 @@ import Mark from "@/components/ui/Mark";
 import StoreButtons from "@/components/ui/StoreButtons";
 import { RevealLines, Rise } from "@/components/ui/Reveal";
 import { clamp } from "@/lib/scroll";
+import { onTick, ORDER } from "@/lib/ticker";
 
 /**
  * The payoff. Every particle in the film has been walking toward this shape
@@ -28,30 +29,37 @@ export default function FinalCta() {
       return;
     }
 
+    let progress = 0;
+
     paths.forEach((p) => {
       const len = p.getTotalLength();
       p.style.strokeDasharray = `${len}`;
       p.style.strokeDashoffset = `${len}`;
     });
 
-    let raf = 0;
-    const frame = () => {
-      raf = requestAnimationFrame(frame);
-      const rect = el.getBoundingClientRect();
-      // 0 when the block enters the lower third, 1 once it is centred.
-      const p = clamp((window.innerHeight * 0.92 - rect.top) / (window.innerHeight * 0.65));
+    const lens = paths.map((path) => path.getTotalLength());
+    let last = -1;
 
-      paths.forEach((path, i) => {
-        const len = path.getTotalLength();
-        const local = clamp((p - i * 0.12) / 0.78);
-        path.style.strokeDashoffset = `${len * (1 - local)}`;
-      });
-      heads.forEach((h, i) => {
-        h.style.opacity = `${clamp((p - 0.62 - i * 0.1) / 0.22)}`;
-      });
-    };
-    raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    return onTick({
+      order: ORDER.scene,
+      read: () => {
+        const r = el.getBoundingClientRect();
+        // 0 when the block enters the lower third, 1 once it is centred.
+        progress = clamp((window.innerHeight * 0.92 - r.top) / (window.innerHeight * 0.65));
+      },
+      write: () => {
+        const v = Math.round(progress * 500) / 500;
+        if (v === last) return;
+        last = v;
+        paths.forEach((path, i) => {
+          const local = clamp((v - i * 0.12) / 0.78);
+          path.style.strokeDashoffset = String(lens[i] * (1 - local));
+        });
+        heads.forEach((h, i) => {
+          h.style.opacity = String(clamp((v - 0.62 - i * 0.1) / 0.22));
+        });
+      },
+    });
   }, []);
 
   return (
@@ -65,7 +73,7 @@ export default function FinalCta() {
           <RevealLines
             as="h2"
             className="t-h2 max-w-[16ch]"
-            lines={["Somebody near you", <span key="line-emph">is free on <span className="t-serif">Thursday</span>.</span>]}
+            lines={["Somebody near you", <span key="line-emph">is free <span className="t-serif">Today</span>.</span>]}
           />
 
           <Rise delay={140}>

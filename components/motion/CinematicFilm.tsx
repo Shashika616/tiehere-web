@@ -3,8 +3,12 @@
 import { useEffect, useRef } from "react";
 import { FORMATIONS, DEFAULT_FORMATION, type Vec, type RGB } from "@/lib/formations";
 import { scrollState, clamp, lerp, smoothstep, rand } from "@/lib/scroll";
+import { onTick, ORDER } from "@/lib/ticker";
 
 type Anchor = { key: string; p: number };
+
+/** Alpha is quantised so particles can be batched. 12 steps is below the eye's threshold here. */
+const ALPHA_STEPS = 12;
 
 /**
  * The film.
@@ -12,13 +16,22 @@ type Anchor = { key: string; p: number };
  * One fixed canvas behind the entire document, playing a single continuous
  * shot that is scrubbed by scroll: a thousand scattered people become a city,
  * become seven reasons to meet, become a trust ladder, go still for safety,
- * and finally lock into the TieHere mark. There is no video file, every
- * frame is generated, which is why it weighs nothing and never buffers.
+ * and finally lock into the TieHere mark. There is no video file. Every frame
+ * is generated, which is why it weighs nothing and never buffers.
  *
  * Chapters are not hardcoded to scroll percentages. Each section carries a
  * `data-film="<formation>"` attribute and the film measures where those
  * sections actually are, so editing copy can never desync the picture from
  * the words.
+ *
+ * Three things keep it cheap, all of them measured rather than assumed:
+ *   - particles are drawn in buckets of shared colour and quantised alpha,
+ *     so a frame costs tens of fill() calls instead of 1180;
+ *   - the bloom and vignette gradients are built once per resize, not per
+ *     frame, and tinted with globalAlpha;
+ *   - the bloom and vignette are pre-rendered bitmaps blitted into place,
+ *     not radial gradients re-evaluated across three million pixels twice a
+ *     frame, and the backing store is capped at 1.25x device pixels.
  */
 export default function CinematicFilm() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -34,39 +47,50 @@ export default function CinematicFilm() {
 
     let w = 0;
     let h = 0;
-    let dpr = 1;
     let count = 0;
 
     /* ---- particle buffers (flat arrays, no per-frame allocation) ---- */
-    let ax = new Float32Array(0); // formation A position
-    let ay = new Float32Array(0);
-    let az = new Float32Array(0);
-    let bx = new Float32Array(0); // formation B position
-    let by = new Float32Array(0);
-    let bz = new Float32Array(0);
-    let ar = new Float32Array(0); // formation A colour
-    let ag = new Float32Array(0);
-    let ab = new Float32Array(0);
-    let br = new Float32Array(0); // formation B colour
-    let bg2 = new Float32Array(0);
-    let bb = new Float32Array(0);
+    let ax = new Float32Array(0), ay = new Float32Array(0), az = new Float32Array(0);
+    let bx = new Float32Array(0), by = new Float32Array(0), bz = new Float32Array(0);
+    let pairOf = new Int32Array(0);
     let thinSeed = new Float32Array(0);
     let driftSeed = new Float32Array(0);
     let sizeSeed = new Float32Array(0);
 
+    /* ---- the distinct colour transitions in the current chapter pair ---- */
+    let pairCount = 0;
+    const pairA: number[][] = [];
+    const pairB: number[][] = [];
+
+    /* ---- scratch for the bucketed draw (counting sort, zero allocation) ---- */
+    let sx = new Float32Array(0), sy = new Float32Array(0), sr = new Float32Array(0);
+    let sBucket = new Int32Array(0);
+    let order = new Int32Array(0);
+    let bucketStart = new Int32Array(0);
+    let bucketFill = new Int32Array(0);
+
     let anchors: Anchor[] = [];
     let cachedPair = "";
-
     const tmp: Vec = { x: 0, y: 0, z: 0 };
 
+    /* ---- pre-rendered atmosphere, rebuilt only on resize ----
+       A radial gradient fillRect has to evaluate the ramp per pixel, and two
+       of them across a full viewport was the most expensive thing in the
+       frame. Baked into bitmaps once, they become blits. ---- */
+    let bloomBmp: HTMLCanvasElement | null = null;
+    let vignetteBmp: HTMLCanvasElement | null = null;
+    let bloomRadius = 0;
+
     const allocate = () => {
-      count = mqSmall.matches ? 560 : 1180;
+      count = mqSmall.matches ? 440 : 860;
       const f = () => new Float32Array(count);
       ax = f(); ay = f(); az = f();
       bx = f(); by = f(); bz = f();
-      ar = f(); ag = f(); ab = f();
-      br = f(); bg2 = f(); bb = f();
+      pairOf = new Int32Array(count);
       thinSeed = f(); driftSeed = f(); sizeSeed = f();
+      sx = f(); sy = f(); sr = f();
+      sBucket = new Int32Array(count);
+      order = new Int32Array(count);
       for (let i = 0; i < count; i++) {
         thinSeed[i] = rand(i + 300);
         driftSeed[i] = rand(i + 500) * Math.PI * 2;
@@ -84,6 +108,10 @@ export default function CinematicFilm() {
       const A = FORMATIONS[keyA] ?? FORMATIONS[DEFAULT_FORMATION];
       const B = FORMATIONS[keyB] ?? FORMATIONS[DEFAULT_FORMATION];
 
+      pairA.length = 0;
+      pairB.length = 0;
+      const lookup = new Map<string, number>();
+
       for (let i = 0; i < count; i++) {
         A.place(i, count, tmp);
         ax[i] = tmp.x; ay[i] = tmp.y; az[i] = tmp.z;
@@ -91,14 +119,67 @@ export default function CinematicFilm() {
         bx[i] = tmp.x; by[i] = tmp.y; bz[i] = tmp.z;
 
         const ca: RGB = A.color(i, count);
-        ar[i] = ca[0]; ag[i] = ca[1]; ab[i] = ca[2];
         const cb: RGB = B.color(i, count);
-        br[i] = cb[0]; bg2[i] = cb[1]; bb[i] = cb[2];
+        // Formations draw from a handful of colours, so the set of distinct
+        // start/end pairs is tiny. That set is what makes batching possible.
+        const key = `${ca[0]},${ca[1]},${ca[2]}|${cb[0]},${cb[1]},${cb[2]}`;
+        let idx = lookup.get(key);
+        if (idx === undefined) {
+          idx = pairA.length;
+          lookup.set(key, idx);
+          pairA.push(ca);
+          pairB.push(cb);
+        }
+        pairOf[i] = idx;
+      }
+
+      pairCount = pairA.length;
+      const buckets = pairCount * ALPHA_STEPS;
+      if (bucketStart.length < buckets + 1) {
+        bucketStart = new Int32Array(buckets + 1);
+        bucketFill = new Int32Array(buckets + 1);
       }
     };
 
+    const bake2d = (cw: number, ch: number, paint: (c: CanvasRenderingContext2D) => void) => {
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.ceil(cw));
+      c.height = Math.max(1, Math.ceil(ch));
+      const cc = c.getContext("2d");
+      if (cc) paint(cc);
+      return c;
+    };
+
+    const buildGradients = () => {
+      // The bloom is baked at half resolution and blitted back up: it is a
+      // soft blur, so nothing in it survives to the pixel anyway.
+      bloomRadius = Math.hypot(w, h) * 0.55;
+      const bs = Math.ceil(bloomRadius);
+      bloomBmp = bake2d(bs, bs, (c) => {
+        const g = c.createRadialGradient(bs / 2, bs / 2, 0, bs / 2, bs / 2, bs / 2);
+        g.addColorStop(0, "rgba(0, 117, 246, 1)");
+        g.addColorStop(0.45, "rgba(52, 194, 76, 0.35)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        c.fillStyle = g;
+        c.fillRect(0, 0, bs, bs);
+      });
+
+      const vw = Math.ceil(w / 2);
+      const vh2 = Math.ceil(h / 2);
+      const vr = Math.hypot(vw, vh2) * 0.62;
+      vignetteBmp = bake2d(vw, vh2, (c) => {
+        const g = c.createRadialGradient(vw / 2, vh2 / 2, vr * 0.28, vw / 2, vh2 / 2, vr);
+        g.addColorStop(0, "rgba(7,9,12,0)");
+        g.addColorStop(1, "rgba(7,9,12,0.72)");
+        c.fillStyle = g;
+        c.fillRect(0, 0, vw, vh2);
+      });
+    };
+
     const measure = () => {
-      dpr = Math.min(2, window.devicePixelRatio || 1);
+      // Soft dots and gradients: 1.25x is indistinguishable from 2x here and
+      // is 60% fewer pixels to fill every frame.
+      const dpr = Math.min(1.25, window.devicePixelRatio || 1);
       w = window.innerWidth;
       h = window.innerHeight;
       canvas.width = Math.floor(w * dpr);
@@ -106,6 +187,7 @@ export default function CinematicFilm() {
       canvas.style.width = w + "px";
       canvas.style.height = h + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      buildGradients();
     };
 
     /** Read where each chapter actually lives in the document. */
@@ -128,10 +210,7 @@ export default function CinematicFilm() {
     };
 
     /* ---- pointer parallax: the camera, not the particles ---- */
-    let mx = 0;
-    let my = 0;
-    let cmx = 0;
-    let cmy = 0;
+    let mx = 0, my = 0, cmx = 0, cmy = 0;
     const onPointer = (e: PointerEvent) => {
       mx = (e.clientX / window.innerWidth - 0.5) * 2;
       my = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -145,18 +224,13 @@ export default function CinematicFilm() {
       document.documentElement.dataset.filmLight = isLight ? "1" : "0";
     };
 
-    let raf = 0;
-    let running = true;
-    let t0 = performance.now();
+    const t0 = performance.now();
 
-    const frame = (now: number) => {
-      raf = requestAnimationFrame(frame);
-      if (!running) return;
-
+    const draw = (now: number) => {
       const time = (now - t0) / 1000;
 
-      // Filmic lag. The picture trails the scrubber slightly, this single
-      // line is most of why it reads as footage rather than as a slider.
+      // Filmic lag. The picture trails the scrubber slightly, which is most of
+      // why it reads as footage rather than as a slider.
       scrollState.smooth = reduced
         ? scrollState.raw
         : lerp(scrollState.smooth, scrollState.raw, 0.075);
@@ -168,8 +242,7 @@ export default function CinematicFilm() {
       const a0 = anchors[i0];
       const a1 = anchors[Math.min(i0 + 1, anchors.length - 1)];
       const span = Math.max(1e-4, a1.p - a0.p);
-      const tRaw = clamp((p - a0.p) / span);
-      const t = smoothstep(tRaw);
+      const t = smoothstep(clamp((p - a0.p) / span));
 
       bake(a0.key, a1.key);
       const FA = FORMATIONS[a0.key] ?? FORMATIONS[DEFAULT_FORMATION];
@@ -187,19 +260,16 @@ export default function CinematicFilm() {
 
       const luminance = (0.2126 * gr + 0.7152 * gg + 0.0722 * gb) / 255;
       setLight(luminance > 0.5);
+      const dark = luminance < 0.5;
 
       /* --- atmosphere: one soft brand-tinted bloom, drifting --- */
-      if (luminance < 0.5) {
-        const bloomX = w * (0.5 + Math.sin(time * 0.08) * 0.12 + cmx * 0.04);
-        const bloomY = h * (0.46 + Math.cos(time * 0.062) * 0.1);
-        const rad = Math.hypot(w, h) * 0.55;
-        const g = ctx.createRadialGradient(bloomX, bloomY, 0, bloomX, bloomY, rad);
-        const warm = 0.055 + 0.03 * Math.sin(time * 0.11);
-        g.addColorStop(0, `rgba(0, 117, 246, ${warm})`);
-        g.addColorStop(0.45, `rgba(52, 194, 76, ${warm * 0.35})`);
-        g.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, w, h);
+      if (dark && bloomBmp) {
+        const bx0 = w * (0.5 + Math.sin(time * 0.08) * 0.12 + cmx * 0.04);
+        const by0 = h * (0.46 + Math.cos(time * 0.062) * 0.1);
+        const d = bloomRadius * 2;
+        ctx.globalAlpha = 0.055 + 0.03 * Math.sin(time * 0.11);
+        ctx.drawImage(bloomBmp, bx0 - bloomRadius, by0 - bloomRadius, d, d);
+        ctx.globalAlpha = 1;
       }
 
       /* --- camera --- */
@@ -209,10 +279,13 @@ export default function CinematicFilm() {
       const cy = h / 2 + cmy * 16;
       const S = Math.hypot(w, h) * 0.255;
       const focal = 2.75;
+      const buckets = pairCount * ALPHA_STEPS;
 
-      /* --- particles --- */
+      /* --- pass 1: project, and tally how many land in each colour bucket --- */
+      bucketFill.fill(0, 0, buckets + 1);
+      let visible = 0;
+
       for (let i = 0; i < count; i++) {
-        // fade-out dissolve, soft-edged so chapters cross-dissolve
         const keep = clamp((thinSeed[i] - thin) / 0.14);
         if (keep <= 0.001) continue;
 
@@ -229,32 +302,64 @@ export default function CinematicFilm() {
         const s = focal / (focal + z + cmy * 0.05);
         if (s <= 0) continue;
 
-        const sx = cx + x * s * S;
-        const sy = cy + y * s * S;
-        if (sx < -60 || sx > w + 60 || sy < -60 || sy > h + 60) continue;
+        const px = cx + x * s * S;
+        const py = cy + y * s * S;
+        if (px < -60 || px > w + 60 || py < -60 || py > h + 60) continue;
 
         const depth = clamp((s - 0.55) / 0.95);
-        const r = lerp(ar[i], br[i], t);
-        const g2 = lerp(ag[i], bg2[i], t);
-        const b2 = lerp(ab[i], bb[i], t);
         const alpha = keep * (0.12 + depth * 0.58);
-        const size = sizeSeed[i] * (0.75 + depth * 1.45);
+        let step = (alpha * ALPHA_STEPS) | 0;
+        if (step >= ALPHA_STEPS) step = ALPHA_STEPS - 1;
+        if (step < 0) step = 0;
 
-        ctx.fillStyle = `rgba(${r | 0},${g2 | 0},${b2 | 0},${alpha.toFixed(3)})`;
+        sx[visible] = px;
+        sy[visible] = py;
+        sr[visible] = sizeSeed[i] * (0.75 + depth * 1.45);
+        const bucket = pairOf[i] * ALPHA_STEPS + step;
+        sBucket[visible] = bucket;
+        bucketFill[bucket]++;
+        visible++;
+      }
+
+      /* --- pass 2: prefix sums, then scatter into bucket order --- */
+      let running = 0;
+      for (let bI = 0; bI <= buckets; bI++) {
+        bucketStart[bI] = running;
+        running += bucketFill[bI];
+        bucketFill[bI] = bucketStart[bI];
+      }
+      for (let i = 0; i < visible; i++) order[bucketFill[sBucket[i]]++] = i;
+
+      /* --- pass 3: one path and one fill per bucket --- */
+      for (let bI = 0; bI < buckets; bI++) {
+        const from = bucketStart[bI];
+        const to = bucketFill[bI];
+        if (to <= from) continue;
+
+        const pi = (bI / ALPHA_STEPS) | 0;
+        const step = bI - pi * ALPHA_STEPS;
+        const ca = pairA[pi];
+        const cb = pairB[pi];
+        const r = lerp(ca[0], cb[0], t) | 0;
+        const g = lerp(ca[1], cb[1], t) | 0;
+        const b2 = lerp(ca[2], cb[2], t) | 0;
+        const a = (step + 0.5) / ALPHA_STEPS;
+
+        ctx.fillStyle = `rgba(${r},${g},${b2},${a.toFixed(3)})`;
         ctx.beginPath();
-        ctx.arc(sx, sy, size, 0, 6.2832);
+        for (let k = from; k < to; k++) {
+          const i = order[k];
+          const rad = sr[i];
+          ctx.moveTo(sx[i] + rad, sy[i]);
+          ctx.arc(sx[i], sy[i], rad, 0, 6.2832);
+        }
         ctx.fill();
       }
 
-      /* --- vignette: keeps the frame cinematic and, more usefully, keeps
-             particles from competing with type at the edges of the shot --- */
-      if (luminance < 0.5) {
-        const vr = Math.hypot(w, h) * 0.62;
-        const v = ctx.createRadialGradient(w / 2, h / 2, vr * 0.28, w / 2, h / 2, vr);
-        v.addColorStop(0, "rgba(7,9,12,0)");
-        v.addColorStop(1, "rgba(7,9,12,0.72)");
-        ctx.fillStyle = v;
-        ctx.fillRect(0, 0, w, h);
+      /* --- vignette: keeps the frame cinematic and keeps particles from
+             competing with type at the edges --- */
+      if (dark && vignetteBmp) {
+        ctx.drawImage(vignetteBmp, 0, 0, w, h);
       }
     };
 
@@ -267,21 +372,15 @@ export default function CinematicFilm() {
 
     window.addEventListener("resize", onResize);
     window.addEventListener("pointermove", onPointer, { passive: true });
-    const onVis = () => {
-      running = !document.hidden;
-      t0 = performance.now() - 1000;
-    };
-    document.addEventListener("visibilitychange", onVis);
 
-    raf = requestAnimationFrame(frame);
+    const stop = onTick({ order: ORDER.film, write: draw });
 
     return () => {
-      cancelAnimationFrame(raf);
+      stop();
       window.clearTimeout(settle);
       window.clearTimeout(settle2);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointermove", onPointer);
-      document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 

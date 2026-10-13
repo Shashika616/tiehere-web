@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { clamp, lerp } from "@/lib/scroll";
+import { onTick, ORDER } from "@/lib/ticker";
 
 /**
  * A photographic cut in the film.
@@ -47,32 +48,52 @@ export default function ScrollScene({
       return;
     }
 
-    let raf = 0;
     let shownNow = 0;
     let driftNow = 0;
+    let shownTarget = 0;
+    let driftTarget = 0;
+    // Last values written, so an unchanged frame costs no style recalc.
+    let lastScale = -1;
+    let lastOpacity = -1;
+    let lastDrift = -1;
 
-    const tick = () => {
-      raf = requestAnimationFrame(tick);
-      const r = f.getBoundingClientRect();
-      const vh = window.innerHeight;
+    return onTick({
+      order: ORDER.scene,
+      read: () => {
+        const r = f.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // Cheap cull: nowhere near the viewport means nothing to animate.
+        if (r.bottom < -vh || r.top > vh * 2) {
+          shownTarget = r.top > 0 ? 0 : 1;
+          driftTarget = r.top > 0 ? 1 : -1;
+          return;
+        }
+        shownTarget = clamp((vh * 0.96 - r.top) / (vh * 0.62));
+        driftTarget = clamp((r.top + r.height / 2) / vh, 0, 1) * 2 - 1;
+      },
+      write: () => {
+        shownNow = lerp(shownNow, shownTarget, 0.16);
+        driftNow = lerp(driftNow, driftTarget, 0.16);
 
-      // 0 as the frame enters the lower edge, 1 once it is comfortably in view.
-      const shown = clamp((vh * 0.96 - r.top) / (vh * 0.62));
-      // -1 above the viewport, +1 below it. Drives the parallax drift.
-      const through = clamp((r.top + r.height / 2) / vh, 0, 1) * 2 - 1;
+        const scale = Math.round((0.94 + shownNow * 0.06) * 10000) / 10000;
+        const opacity = Math.round((0.25 + shownNow * 0.75) * 1000) / 1000;
+        const drift = Math.round(driftNow * 7 * 100) / 100;
 
-      shownNow = lerp(shownNow, shown, 0.12);
-      driftNow = lerp(driftNow, through, 0.12);
-
-      const scale = 0.94 + shownNow * 0.06;
-      f.style.transform = `scale(${scale.toFixed(4)})`;
-      f.style.opacity = (0.25 + shownNow * 0.75).toFixed(3);
-      // The picture moves against the page: slower, and the opposite way.
-      im.style.transform = `translate3d(0, ${(driftNow * 7).toFixed(2)}%, 0) scale(1.16)`;
-    };
-
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+        if (scale !== lastScale) {
+          f.style.transform = `scale(${scale})`;
+          lastScale = scale;
+        }
+        if (opacity !== lastOpacity) {
+          f.style.opacity = String(opacity);
+          lastOpacity = opacity;
+        }
+        if (drift !== lastDrift) {
+          // The picture moves against the page: slower, and the opposite way.
+          im.style.transform = `translate3d(0, ${drift}%, 0) scale(1.16)`;
+          lastDrift = drift;
+        }
+      },
+    });
   }, []);
 
   return (
@@ -97,8 +118,8 @@ export default function ScrollScene({
             introducing a third, and ties it to the cards. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.14] mix-blend-color"
-          style={{ background: "linear-gradient(150deg, #0075F6 0%, #34C24C 100%)" }}
+          className="pointer-events-none absolute inset-0 opacity-[0.18]"
+          style={{ background: "linear-gradient(150deg, rgba(0,117,246,0.85) 0%, rgba(52,194,76,0.8) 100%)" }}
         />
         <div
           aria-hidden="true"

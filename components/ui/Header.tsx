@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Mark from "./Mark";
+import Lockup from "./Lockup";
 
 /**
  * Transparent over the hero, backed after one viewport. Inverts to dark type
@@ -12,12 +12,34 @@ export default function Header() {
   const [stuck, setStuck] = useState(false);
   const [menu, setMenu] = useState(false);
   const [atEnd, setAtEnd] = useState(false);
+  const [current, setCurrent] = useState<string | null>(null);
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > window.innerHeight * 0.75);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Which section the reader is actually in. A thin band across the middle of
+  // the viewport means exactly one section qualifies at a time; in the gaps
+  // between them (a photographic chapter, say) the last one stays lit, which
+  // is what a reader expects from a progress indicator.
+  useEffect(() => {
+    const ids = ["how", "trust", "safety", "faq"];
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) setCurrent("#" + e.target.id);
+        }
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: 0 },
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
   }, []);
 
   // Retire the sticky CTA once the real one is on screen. Past that point it
@@ -52,7 +74,7 @@ export default function Header() {
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          stuck ? "border-b border-white/[0.07] bg-[rgba(7,9,12,0.62)] backdrop-blur-xl" : ""
+          stuck ? "border-b border-white/[0.07] bg-[rgba(7,9,12,0.72)] backdrop-blur-md" : ""
         }`}
         data-header
       >
@@ -67,9 +89,8 @@ export default function Header() {
         />
 
         <div className="shell relative flex h-16 items-center justify-between md:h-20">
-          <a href="#top" className="flex items-center gap-2.5" aria-label="TieHere, home">
-            <Mark size={26} />
-            <span className="text-[0.95rem] font-medium tracking-tight">TieHere</span>
+          <a href="#top" aria-label="TieHere, home" className="group inline-flex">
+            <Lockup id="nav-lockup" />
           </a>
 
           <nav className="hidden items-center gap-9 md:flex" aria-label="Primary">
@@ -77,9 +98,11 @@ export default function Header() {
               <a
                 key={l.href}
                 href={l.href}
-                className="t-nav transition-colors duration-200 hover:!text-white"
+                data-current={current === l.href ? "" : undefined}
+                aria-current={current === l.href ? "true" : undefined}
+                className="nav-link t-nav"
               >
-                {l.label}
+                <span>{l.label}</span>
               </a>
             ))}
             <a
@@ -123,7 +146,9 @@ export default function Header() {
               key={l.href}
               href={l.href}
               onClick={() => setMenu(false)}
-              className="t-h2 py-2 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              data-current={current === l.href ? "" : undefined}
+              aria-current={current === l.href ? "true" : undefined}
+              className="nav-link-m t-h2 py-2 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
               style={{
                 transform: menu ? "none" : "translateY(28px)",
                 opacity: menu ? 1 : 0,

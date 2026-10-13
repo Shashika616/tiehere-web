@@ -308,3 +308,115 @@ section[id],
 article[id] {
   scroll-margin-top: 5.5rem;
 }
+
+/* ---- The brand flight.
+   One lockup travels from the hero into the nav. The static copies stay in
+   the document (for layout, and for no-JS / reduced motion) and simply yield
+   to the flying one while it is in the air. ---- */
+html[data-brand-flight="1"] #hero-lockup {
+  opacity: 0;
+}
+html[data-brand-flight="1"] #nav-lockup {
+  transition: opacity 180ms linear;
+}
+
+/* A small piece of life on the mark: the green figure lifts toward the blue
+   one on hover, which is the product's whole idea in two pixels. */
+#nav-lockup circle:nth-of-type(2) {
+  transition: transform 320ms var(--ease-out-soft);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.group:hover #nav-lockup circle:nth-of-type(2) {
+  transform: translateY(-9px);
+}
+
+/* ---- The wordmark ----
+   "Tie" inherits whatever colour its context carries, so it is white on the
+   dark ground and flips to dark type over the light safety chapter without a
+   second rule. "Here" is brand green: 8.5:1 on the dark ground, but only
+   3.4:1 on paper, so the light chapter gets a darker green that clears AA. */
+.brand-here {
+  color: #34c24c;
+}
+html[data-film-light="1"] header[data-header] .brand-here {
+  color: #1e7a33;
+}
+
+/* ---- Navigation states ----
+   Three distinguishable states, because "which one am I on" and "which one am
+   I about to click" are different questions: rest is quiet, hover draws a
+   white rule in from the left, and the section you are actually reading keeps
+   a green one. Colour alone would not separate hover from current, so the
+   rule's colour does the work and weight stays constant to avoid reflow. */
+.nav-link {
+  position: relative;
+  padding-block: 0.35rem;
+}
+.nav-link > span {
+  position: relative;
+  display: inline-block;
+}
+.nav-link > span::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.3rem;
+  height: 1.5px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition:
+    transform 260ms var(--ease-out-soft),
+    background-color 200ms linear;
+}
+.nav-link:hover,
+.nav-link:focus-visible {
+  color: #fff;
+}
+.nav-link:hover > span::after,
+.nav-link:focus-visible > span::after {
+  transform: scaleX(1);
+}
+.nav-link[data-current] {
+  color: #fff;
+}
+.nav-link[data-current] > span::after {
+  transform: scaleX(1);
+  background: var(--color-brand-green);
+}
+/* The rule is the focus affordance here, so the default ring would be noise. */
+.nav-link:focus-visible {
+  outline: none;
+}
+.nav-link:focus-visible > span::after {
+  background: var(--color-brand-blue);
+}
+
+html[data-film-light="1"] header[data-header] .nav-link:hover,
+html[data-film-light="1"] header[data-header] .nav-link:focus-visible,
+html[data-film-light="1"] header[data-header] .nav-link[data-current] {
+  color: #0f1318;
+}
+html[data-film-light="1"] header[data-header] .nav-link[data-current] > span::after {
+  background: #1e7a33;
+}
+
+/* Mobile overlay: a green marker rather than an underline, which would be
+   lost under a 2.5rem heading. */
+.nav-link-m {
+  position: relative;
+}
+.nav-link-m[data-current]::before {
+  content: "";
+  position: absolute;
+  left: -0.85rem;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 999px;
+  background: var(--color-brand-green);
+}

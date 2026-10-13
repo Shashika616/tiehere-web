@@ -1,4 +1,5 @@
 import { RevealLines, Rise } from "@/components/ui/Reveal";
+import Lockup from "@/components/ui/Lockup";
 import StoreButtons from "@/components/ui/StoreButtons";
 
 export default function Hero() {
@@ -6,8 +7,12 @@ export default function Hero() {
     <section
       id="top"
       data-film="cloud"
-      className="relative flex min-h-[100svh] items-end pb-24 pt-32 md:pb-32"
+      className="relative flex min-h-[100svh] flex-col justify-between pb-24 pt-28 md:pb-32 md:pt-32"
     >
+      <div className="shell w-full">
+        <Lockup id="hero-lockup" variant="hero" />
+      </div>
+
       <div className="shell w-full">
         <RevealLines
           as="h1"

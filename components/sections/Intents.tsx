@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { INTENTS } from "@/content/site";
 import { clamp, lerp } from "@/lib/scroll";
+import { onTick, ORDER } from "@/lib/ticker";
 
 /**
  * The horizontal chapter: seven intents scrubbed sideways by vertical scroll.
@@ -17,13 +18,19 @@ import { clamp, lerp } from "@/lib/scroll";
  * Hijacking vertical scroll to move things sideways on a phone is a trap.
  *
  * The photographs are CC0 (see IMAGE-CREDITS.md), graded down and tinted
- * lightly toward the two brand colours so seven pictures from four different
- * sources read as one set. Full colour returns on hover, which is the card
- * coming alive under the pointer.
+ * lightly toward the two brand colours so seven pictures from several sources
+ * read as one set. Full colour returns on hover, which is the card coming
+ * alive under the pointer.
+ *
+ * The tint is a plain translucent gradient, not `mix-blend-mode`. A blend
+ * group on each of seven cards is something the compositor re-resolves every
+ * frame while the track scrubs sideways; at this opacity the two are almost
+ * indistinguishable and only one of them is free.
  */
 export default function Intents() {
   const section = useRef<HTMLElement>(null);
   const track = useRef<HTMLDivElement>(null);
+  const trackWidth = useRef(0);
   const [pinned, setPinned] = useState(true);
 
   useEffect(() => {
@@ -31,8 +38,16 @@ export default function Intents() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const apply = () => setPinned(mq.matches && !reduced);
     apply();
+    const remeasure = () => {
+      trackWidth.current = track.current?.scrollWidth ?? 0;
+    };
+    remeasure();
     mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
+    window.addEventListener("resize", remeasure);
+    return () => {
+      mq.removeEventListener("change", apply);
+      window.removeEventListener("resize", remeasure);
+    };
   }, []);
 
   useEffect(() => {
@@ -41,29 +56,39 @@ export default function Intents() {
       return;
     }
 
-    let raf = 0;
     let current = 0;
+    let target = 0;
+    let last = -1;
 
-    const frame = () => {
-      raf = requestAnimationFrame(frame);
-      const sec = section.current;
-      const tr = track.current;
-      if (!sec || !tr) return;
+    return onTick({
+      order: ORDER.track,
+      read: () => {
+        const sec = section.current;
+        const tr = track.current;
+        if (!sec || !tr) return;
 
-      const rect = sec.getBoundingClientRect();
-      const scrollable = rect.height - window.innerHeight;
-      if (scrollable <= 0) return;
+        const rect = sec.getBoundingClientRect();
+        const scrollable = rect.height - window.innerHeight;
+        if (scrollable <= 0) return;
 
-      const p = clamp(-rect.top / scrollable);
-      const distance = Math.max(0, tr.scrollWidth - window.innerWidth + 96);
-
-      // Damped, so the cards carry a little weight instead of snapping to the wheel.
-      current = lerp(current, p * distance, 0.12);
-      tr.style.transform = `translate3d(${-current.toFixed(2)}px,0,0)`;
-    };
-
-    raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+        const p = clamp(-rect.top / scrollable);
+        // scrollWidth is a layout read; it only changes on resize, so cache it.
+        if (trackWidth.current === 0) trackWidth.current = tr.scrollWidth;
+        const distance = Math.max(0, trackWidth.current - window.innerWidth + 96);
+        target = p * distance;
+      },
+      write: () => {
+        const tr = track.current;
+        if (!tr) return;
+        // Damped, so the cards carry a little weight instead of snapping to the wheel.
+        current = lerp(current, target, 0.2);
+        const v = Math.round(current * 100) / 100;
+        if (v !== last) {
+          tr.style.transform = `translate3d(${-v}px,0,0)`;
+          last = v;
+        }
+      },
+    });
   }, [pinned]);
 
   return (
@@ -118,12 +143,12 @@ export default function Intents() {
                 />
                 <div
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 mix-blend-color opacity-[0.18] transition-opacity duration-700 group-hover:opacity-0"
+                  className="pointer-events-none absolute inset-0 opacity-[0.22] transition-opacity duration-700 group-hover:opacity-0"
                   style={{
                     background:
                       i % 2 === 0
-                        ? "linear-gradient(155deg, #0075F6 0%, #1E8FA8 62%, #34C24C 100%)"
-                        : "linear-gradient(155deg, #2BA36B 0%, #1273C9 70%, #0075F6 100%)",
+                        ? "linear-gradient(155deg, rgba(0,117,246,0.9) 0%, rgba(30,143,168,0.7) 62%, rgba(52,194,76,0.75) 100%)"
+                        : "linear-gradient(155deg, rgba(43,163,107,0.8) 0%, rgba(18,115,201,0.75) 70%, rgba(0,117,246,0.9) 100%)",
                   }}
                 />
                 {/* Ground for the type. Near solid where the words sit. */}

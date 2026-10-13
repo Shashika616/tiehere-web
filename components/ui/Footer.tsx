@@ -1,4 +1,4 @@
-import Mark from "./Mark";
+import Lockup from "./Lockup";
 import { BRAND } from "@/content/site";
 
 export default function Footer() {
@@ -8,10 +8,7 @@ export default function Footer() {
     <footer className="relative border-t border-white/10">
       <div className="shell grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr] md:py-20">
         <div>
-          <div className="flex items-center gap-2.5">
-            <Mark size={28} />
-            <span className="text-base font-medium tracking-tight">TieHere</span>
-          </div>
+          <Lockup />
           <p className="t-lead mt-5 max-w-sm !text-[0.95rem]">{BRAND.line}</p>
         </div>
 

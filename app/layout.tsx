@@ -4,6 +4,7 @@ import "./globals.css";
 import SmoothScroll from "@/components/motion/SmoothScroll";
 import CinematicFilm from "@/components/motion/CinematicFilm";
 import Header from "@/components/ui/Header";
+import BrandFlight from "@/components/motion/BrandFlight";
 import Footer from "@/components/ui/Footer";
 import { BRAND } from "@/content/site";
 
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScroll />
         <CinematicFilm />
         <Header />
+        <BrandFlight />
         <main id="main">{children}</main>
         <Footer />
       </body>

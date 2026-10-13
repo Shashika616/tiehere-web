@@ -3,18 +3,15 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 import { scrollState, prefersReducedMotion } from "@/lib/scroll";
+import { onTick, ORDER } from "@/lib/ticker";
 
 /**
  * Mounted once in the root layout so every page stays server-rendered.
  *
- * Two jobs: damped scrolling on pointer devices, and writing
- * `scrollState.raw`, which the film reads every frame.
- *
- * There is deliberately no GSAP/ScrollTrigger here. Every scroll-driven
- * element on this site (the pinned intent track, the trust ladder, the mark
- * that draws itself) reads its own `getBoundingClientRect` inside its own
- * rAF loop. That is a fraction of the weight and, more importantly, cannot
- * desync from Lenis the way a scroller proxy plus a pin can.
+ * Damped scrolling on pointer devices, and writing `scrollState.raw`, which
+ * the film and every scroll-driven component read. Lenis is driven from the
+ * shared ticker at order 0, so scroll position has settled before anything
+ * else reads layout this frame.
  */
 export default function SmoothScroll() {
   useEffect(() => {
@@ -23,8 +20,13 @@ export default function SmoothScroll() {
 
     const isTouch = window.matchMedia("(hover: none)").matches;
 
+    let max = 1;
+    const measure = () => {
+      max = document.documentElement.scrollHeight - window.innerHeight;
+    };
+    measure();
+
     const readProgress = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
       scrollState.raw = max > 0 ? window.scrollY / max : 0;
     };
     readProgress();
@@ -33,36 +35,46 @@ export default function SmoothScroll() {
       // Native scrolling: we only observe it. Emulated momentum is worse than
       // the platform's own on touch, and unwanted entirely under reduced motion.
       window.addEventListener("scroll", readProgress, { passive: true });
-      window.addEventListener("resize", readProgress);
+      window.addEventListener("resize", () => {
+        measure();
+        readProgress();
+      });
       if (reduced) scrollState.smooth = scrollState.raw;
       return () => {
         window.removeEventListener("scroll", readProgress);
-        window.removeEventListener("resize", readProgress);
       };
     }
 
     const lenis = new Lenis({
-      lerp: 0.09,
+      // 0.09 is a ~200ms trail behind the wheel, which reads as lag, not
+      // smoothness. 0.16 keeps the glide and gives the input back.
+      lerp: 0.16,
       wheelMultiplier: 1,
       smoothWheel: true,
       syncTouch: false,
     });
 
-    // Exposed so local tooling (scripts/shoot.mjs) can drive scroll position
-    // deterministically; Lenis owns scrollTop, so window.scrollTo would fight it.
+    // Exposed so local tooling (scripts/shoot.mjs, scripts/perf.mjs) can drive
+    // scroll deterministically; Lenis owns scrollTop, so window.scrollTo fights it.
     (window as unknown as { lenis?: Lenis }).lenis = lenis;
 
-    lenis.on("scroll", readProgress);
-
-    let raf = 0;
-    const tick = (time: number) => {
-      lenis.raf(time);
-      raf = requestAnimationFrame(tick);
+    const onResize = () => {
+      measure();
+      readProgress();
     };
-    raf = requestAnimationFrame(tick);
+    window.addEventListener("resize", onResize);
+
+    const stop = onTick({
+      order: ORDER.scroll,
+      read: (t) => {
+        lenis.raf(t);
+        readProgress();
+      },
+    });
 
     return () => {
-      cancelAnimationFrame(raf);
+      stop();
+      window.removeEventListener("resize", onResize);
       lenis.destroy();
       delete (window as unknown as { lenis?: Lenis }).lenis;
     };
