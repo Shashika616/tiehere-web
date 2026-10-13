@@ -68,7 +68,7 @@ const cloud: Formation = {
     return ground();
   },
   thin: 0.06,
-  life: 1,
+  life: 1.6,
 };
 
 /**
@@ -94,7 +94,7 @@ const sparse: Formation = {
     return ground();
   },
   thin: 0.78,
-  life: 0.55,
+  life: 1.1,
 };
 
 /**
@@ -123,7 +123,7 @@ const city: Formation = {
     return ground();
   },
   thin: 0.1,
-  life: 0.35,
+  life: 1.05,
 };
 
 /**
@@ -146,7 +146,7 @@ const fan: Formation = {
     return ground();
   },
   thin: 0.08,
-  life: 0.6,
+  life: 1.2,
 };
 
 /**
@@ -172,7 +172,7 @@ const ladder: Formation = {
     return ground();
   },
   thin: 0.14,
-  life: 0.45,
+  life: 1.25,
 };
 
 /**
@@ -220,7 +220,9 @@ const settle: Formation = {
     return ground();
   },
   thin: 0.5,
-  life: 0.3,
+  // This chapter carries the whole FAQ, which is a long stretch of reading.
+  // A nearly static field there made the page feel like it had stopped.
+  life: 1.1,
 };
 
 /**
@@ -318,7 +320,9 @@ const mark: Formation = {
     return ground();
   },
   thin: 0.04,
-  life: 0.5,
+  // Low travel on purpose: this one has to stay readable as the mark, and
+  // the twinkle carries the liveliness without moving anything.
+  life: 0.42,
   // Heavier bodies rather than more of them: radius is free, count is not.
   weight: 1.75,
 };

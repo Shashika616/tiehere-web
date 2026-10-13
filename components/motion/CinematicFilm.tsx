@@ -63,6 +63,14 @@ export default function CinematicFilm() {
     let thinSeed = new Float32Array(0);
     let driftSeed = new Float32Array(0);
     let sizeSeed = new Float32Array(0);
+    /* Each particle's phase, precomputed as sin/cos pairs. Expanding
+       sin(wt + d) into sinWt*cosD + cosWt*sinD turns four trig calls per
+       particle per frame into ten for the whole frame, which is what makes a
+       livelier field free rather than expensive. */
+    let sinD = new Float32Array(0);
+    let cosD = new Float32Array(0);
+    let sinD2 = new Float32Array(0);
+    let cosD2 = new Float32Array(0);
 
     /* ---- the distinct colour transitions in the current chapter pair ---- */
     let pairCount = 0;
@@ -122,6 +130,7 @@ export default function CinematicFilm() {
       bx = f(); by = f(); bz = f();
       pairOf = new Int32Array(count);
       thinSeed = f(); driftSeed = f(); sizeSeed = f();
+      sinD = f(); cosD = f(); sinD2 = f(); cosD2 = f();
       sx = f(); sy = f(); sr = f();
       sBucket = new Int32Array(count);
       order = new Int32Array(count);
@@ -129,6 +138,11 @@ export default function CinematicFilm() {
         thinSeed[i] = rand(i + 300);
         driftSeed[i] = rand(i + 500) * Math.PI * 2;
         sizeSeed[i] = 0.55 + rand(i + 700) * 0.95;
+        const d = driftSeed[i];
+        sinD[i] = Math.sin(d);
+        cosD[i] = Math.cos(d);
+        sinD2[i] = Math.sin(d * 2.3);
+        cosD2[i] = Math.cos(d * 2.3);
       }
       cachedPair = "";
     };
@@ -311,10 +325,10 @@ export default function CinematicFilm() {
 
       /* --- atmosphere: one soft brand-tinted bloom, drifting --- */
       if (dark === palette.dark && bloomBmp) {
-        const bx0 = w * (0.5 + Math.sin(time * 0.08) * 0.12 + cmx * 0.04);
-        const by0 = h * (0.46 + Math.cos(time * 0.062) * 0.1);
+        const bx0 = w * (0.5 + Math.sin(time * 0.14) * 0.17 + cmx * 0.04);
+        const by0 = h * (0.46 + Math.cos(time * 0.105) * 0.14);
         const d = bloomRadius * 2;
-        ctx.globalAlpha = 0.055 + 0.03 * Math.sin(time * 0.11);
+        ctx.globalAlpha = 0.055 + 0.035 * Math.sin(time * 0.19);
         ctx.drawImage(bloomBmp, bx0 - bloomRadius, by0 - bloomRadius, d, d);
         ctx.globalAlpha = 1;
       }
@@ -324,7 +338,28 @@ export default function CinematicFilm() {
       cmy = lerp(cmy, my, 0.045);
       const cx = w / 2 + cmx * 22;
       const cy = h / 2 + cmy * 16;
-      const S = Math.hypot(w, h) * 0.255;
+      // The whole field breathes, very slowly. Small enough that you never
+      // catch it moving, large enough that the frame is never quite still.
+      const breath = reduced ? 1 : 1 + 0.014 * Math.sin(time * 0.21);
+      const S = Math.hypot(w, h) * 0.255 * breath;
+
+      // Two octaves of drift plus a twinkle, evaluated once for the frame.
+      const s1 = Math.sin(time * 0.38), c1 = Math.cos(time * 0.38);
+      const s2 = Math.sin(time * 0.31), c2 = Math.cos(time * 0.31);
+      const s3 = Math.sin(time * 1.27), c3 = Math.cos(time * 1.27);
+      const s4 = Math.sin(time * 1.43), c4 = Math.cos(time * 1.43);
+      const s5 = Math.sin(time * 1.65), c5 = Math.cos(time * 1.65);
+      // A brightness shimmer is not travel, so a gentle one survives reduced
+      // motion: the field still feels awake without anything moving.
+      const twk = reduced ? 0.09 : 0.3;
+
+      // A slow swirl of the whole field. Rotation is rigid, so it gives the
+      // background a constant sense of travel without smearing any of the
+      // shapes the chapters are made of, which is what raising the per-particle
+      // drift does instead.
+      const ang = reduced ? 0 : 0.085 * Math.sin(time * 0.085) + 0.03 * Math.sin(time * 0.21);
+      const ca = Math.cos(ang);
+      const sa = Math.sin(ang);
       const focal = 2.75;
       const buckets = pairCount * ALPHA_STEPS;
 
@@ -341,21 +376,27 @@ export default function CinematicFilm() {
         const z = lerp(az[i], bz[i], t);
 
         if (life > 0) {
-          const d = driftSeed[i];
-          x += Math.sin(time * 0.33 + d) * 0.035 * life;
-          y += Math.cos(time * 0.27 + d * 1.7) * 0.03 * life;
+          const sd = sinD[i], cd = cosD[i], sd2 = sinD2[i], cd2 = cosD2[i];
+          // Slow wander, plus a faster shimmer so individual dots visibly move
+          // rather than the whole field creeping as one.
+          x += ((s1 * cd + c1 * sd) * 0.044 + (s3 * cd2 + c3 * sd2) * 0.016) * life;
+          y += ((c2 * cd - s2 * sd) * 0.039 + (c4 * cd2 - s4 * sd2) * 0.014) * life;
         }
 
         const s = focal / (focal + z + cmy * 0.05);
         if (s <= 0) continue;
 
-        const px = cx + x * s * S;
-        const py = cy + y * s * S;
+        const rx = x * ca - y * sa;
+        const ry = x * sa + y * ca;
+        const px = cx + rx * s * S;
+        const py = cy + ry * s * S;
         if (px < -60 || px > w + 60 || py < -60 || py > h + 60) continue;
 
         const depth = clamp((s - 0.55) / 0.95);
-        const alpha = keep * (0.12 + depth * 0.58);
+        const twinkle = 1 + twk * (s5 * cosD2[i] + c5 * sinD2[i]);
+        const alpha = keep * (0.12 + depth * 0.58) * twinkle;
         let step = (alpha * ALPHA_STEPS) | 0;
+        if (step > ALPHA_STEPS - 1) step = ALPHA_STEPS - 1;
         if (step >= ALPHA_STEPS) step = ALPHA_STEPS - 1;
         if (step < 0) step = 0;
 

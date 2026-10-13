@@ -66,6 +66,26 @@ too sparse to resolve at any size, and the shape read as an infinity symbol with
 it. The whole mark then has to hang low enough that the heads clear the fixed header instead of
 being cropped off the top of the frame.
 
+## Making the field feel alive
+
+The original drift was a single oscillator at roughly 7px of travel over a nineteen-second cycle,
+which is indistinguishable from a still image. Three things were added, and the split between them
+matters:
+
+- **Two octaves of drift.** A slow wander plus a faster shimmer, so individual particles visibly
+  move rather than the whole field creeping as one.
+- **A twinkle.** Each particle's alpha oscillates on its own phase. This is what actually sells
+  "alive", and because it moves nothing it is the only part that survives reduced motion, at a
+  third of the amplitude.
+- **A global swirl.** The whole field rotates gently back and forth. Rotation is **rigid**, so it
+  adds constant travel without smearing the shapes the chapters are made of, which is exactly what
+  raising per-particle drift does instead. That distinction is why the mark and the knot keep a low
+  `life` while the loose chapters run two to three times higher.
+
+All of it is free: expanding `sin(wt + d)` into `sin(wt)cos(d) + cos(wt)sin(d)` and precomputing
+each particle's `sin(d)`/`cos(d)` turns four trig calls per particle per frame into ten for the
+entire frame.
+
 Density comes from `weight` on the formation, a particle-radius multiplier, rather than from
 raising the global count: radius is free where particle count is not.
 
