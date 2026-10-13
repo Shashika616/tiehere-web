@@ -112,7 +112,8 @@ It is **one element**, not two that cross-fade: `components/motion/BrandFlight.t
 single fixed copy and scrubs it from the hero lockup's measured position and size to the nav
 lockup's. `components/ui/Lockup.tsx` is shared by all three copies so they cannot drift apart.
 
-`node scripts/check-brand-flight.mjs` is the regression check. Three things took measuring:
+`node scripts/check-brand-flight.mjs` is the regression check, including that the nav lockup never
+flashes on load. Four things took measuring:
 
 - The natural gap between the two lockups is only ~100px, so the flight finished in a flick of
   the wheel. Travel is floored at half a viewport.
@@ -124,6 +125,12 @@ lockup's. `components/ui/Lockup.tsx` is shared by all three copies so they canno
   of the page. Fast scrolling skipped straight past it, so it only appeared when scrolling slowly.
 - `(1 - 0.9) / 0.1` is `0.9999999999999998`, so the "landed, remove the flyer" branch needs a
   tolerance rather than an exact `>= 1`, or it never fires.
+- The nav lockup belongs to the flight **from the first frame**. Hiding it in the component's
+  effect meant the server HTML painted it at full opacity for ~280ms before it disappeared, which
+  was plainly visible on a phone, where there is no large hero lockup to draw the eye away. An
+  inline script in `<body>` sets `data-brand-flight="pending"` before the header is even parsed.
+  It is skipped under reduced motion, and a visitor without JavaScript never sets it, so in both
+  of those cases the lockup simply shows.
 
 The wordmark carries the mark's own two colours, solid, never a gradient. Brand blue is 4.5:1 on
 the dark ground, which clears AA but only just, and **fails** on the light safety chapter (3.9:1),

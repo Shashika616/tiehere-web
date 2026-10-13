@@ -324,6 +324,14 @@ article[id] {
 html[data-brand-flight="1"] #hero-lockup {
   opacity: 0;
 }
+/* "pending" is set by an inline script before the header is parsed. The nav
+   lockup belongs to the brand flight from the first frame, so it must never be
+   painted and then hidden. The hero lockup is deliberately NOT hidden here:
+   the flying copy stands exactly where it does, so leaving it visible until
+   the swap means no gap rather than no flash. */
+html[data-brand-flight="pending"] #nav-lockup {
+  opacity: 0;
+}
 html[data-brand-flight="1"] #nav-lockup {
   transition: opacity 180ms linear;
 }

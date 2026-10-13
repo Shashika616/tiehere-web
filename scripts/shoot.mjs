@@ -54,9 +54,13 @@ if (reduced) {
   await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
 }
 
+// Warnings as well as errors: a React hydration mismatch reported here once
+// while this script said the page was clean, so it no longer filters by type
+// as narrowly as it did.
 const errors = [];
 page.on("console", (m) => {
-  if (m.type() === "error") errors.push(m.text());
+  const t = m.type();
+  if (t === "error" || t === "warning") errors.push(`[${t}] ${m.text().slice(0, 200)}`);
 });
 page.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
 
@@ -85,6 +89,6 @@ for (const [name, selector, frac] of STOPS) {
 
 const height = await page.evaluate(() => document.documentElement.scrollHeight);
 console.log(`\npage height: ${height}px`);
-console.log(errors.length ? "CONSOLE ERRORS:\n" + errors.join("\n") : "no console errors");
+console.log(errors.length ? `CONSOLE (${errors.length}):\n` + errors.join("\n") : "no console errors or warnings");
 
 await browser.close();

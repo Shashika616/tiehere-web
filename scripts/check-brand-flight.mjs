@@ -49,4 +49,26 @@ const end = await p.evaluate(() => {
 });
 console.log(`\nat 4000px: flyer ${end.f} (${end.vis}), nav ${end.n}`);
 console.log(bad === 0 ? "PASS: copies never visibly misaligned" : `FAIL: ${bad} misaligned positions`);
+
+// --- first paint: the nav lockup must never be painted and then hidden ---
+const p2 = await b.newPage();
+await p2.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+await p2.evaluateOnNewDocument(() => {
+  window.__op = [];
+  const tick = () => {
+    const el = document.getElementById("nav-lockup");
+    if (el) window.__op.push(getComputedStyle(el).opacity);
+    if (performance.now() < 2500) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+});
+await p2.goto("http://localhost:4321/", { waitUntil: "networkidle0", timeout: 60000 });
+await new Promise((r) => setTimeout(r, 3000));
+const flashed = await p2.evaluate(() => {
+  const o = window.__op.map(Number);
+  // Visible first, hidden later is the flash. Hidden throughout is correct.
+  return o.length > 0 && o[0] > 0.5 && o.some((v) => v < 0.5);
+});
+console.log(flashed ? "FAIL: nav lockup flashes in then out on load" : "PASS: no lockup flash on first paint");
+
 await b.close();
