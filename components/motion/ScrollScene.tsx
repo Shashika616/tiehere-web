@@ -100,7 +100,7 @@ export default function ScrollScene({
     <figure id={id} className="shell my-4 md:my-8">
       <div
         ref={frame}
-        className="relative w-full overflow-hidden rounded-2xl border border-white/10 will-change-transform"
+        className="relative w-full overflow-hidden rounded-2xl border border-on-media-line will-change-transform"
         style={{ height, opacity: 0 }}
       >
         <div ref={inner} className="absolute inset-0 will-change-transform">
@@ -110,7 +110,7 @@ export default function ScrollScene({
             fill
             priority={priority}
             sizes="100vw"
-            className="object-cover brightness-[0.74] contrast-[1.04] saturate-[0.9]"
+            className="media-scene-img object-cover"
           />
         </div>
 
@@ -132,7 +132,7 @@ export default function ScrollScene({
 
         {caption && (
           <figcaption className="absolute inset-x-0 bottom-0 p-7 md:p-10">
-            <p className="t-serif max-w-[26ch] text-[clamp(1.25rem,2.6vw,2rem)] leading-tight text-white">
+            <p className="t-serif max-w-[26ch] text-[clamp(1.25rem,2.6vw,2rem)] leading-tight text-on-media">
               {caption}
             </p>
           </figcaption>

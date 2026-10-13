@@ -294,6 +294,53 @@ Four details that are easy to miss:
 Verified landing within a pixel of the header edge on both viewports, animating rather than
 teleporting, with the overlay closing and the URL and back button staying honest.
 
+## Themes
+
+Dark by default, with a light theme and a toggle in the header. The choice is written to
+`data-theme` on `<html>`, remembered, and applied by the inline script before first paint. The
+system preference is read only when nothing has been chosen; once someone picks, that choice wins.
+
+Colours go through semantic tokens (`--color-fg`, `--color-bg`, `--color-surface`, `--color-line`,
+`--color-cta`…). Tailwind generates utilities against the custom property, so redefining the
+property under `[data-theme="light"]` switches every utility at once without touching a class
+name. **The two brand colours never move**, because a brand colour that shifts with the theme is
+not a brand colour.
+
+Two parts of the design needed thinking about rather than inverting:
+
+- **The safety chapter stays the odd one out.** It is paper against a dark site and ink against a
+  light one, so it reads from its own `--color-alt-*` set. The contrast is the point of that
+  section, so it has to survive the theme rather than follow it.
+- **The chrome follows the canvas, not the theme.** The header floats over a ground that changes
+  independently of the page, so its colours are stated for a dark ground and overridden off
+  `data-film-light`, which the film sets from the luminance it is actually painting. Inheriting the
+  theme tokens instead put dark type on the dark safety chapter of a light site and made the nav
+  almost invisible.
+
+The **safety chapter carries its own opaque ground** rather than borrowing the canvas. The canvas
+cross-dissolves, so the heading arrived while the ground was still halfway between two chapters:
+in the light theme that meant white type on mid-grey. The contrast is that section, so it cannot
+be caught mid-change. The film still paints the matching chapter behind it, which is what keeps
+the header inverting correctly over it.
+
+The **chrome has no edge**. A fixed bar ending in a border reads as a strip laid on the page, so
+both the blur and the tint are masked out toward the bottom and it fades into whatever it is over.
+The tint tracks the canvas, like the type does.
+
+**Photography is graded through variables** (`--media-bright`, `--scene-bright`), so it sits much
+lighter on a paper page. The scrims under the captions are deliberately *not* themed: they are
+what white type sits on, and they stay dark in both themes.
+
+A third category sits outside the theme entirely: **type on photography**. The intent cards, the
+scroll scenes and the step panels are graded dark whichever way the page is set, so they read from
+`--color-on-media-*`, which is white in both themes. Converting them to the page tokens put dark
+type on dark photographs. The one brand mark that does flip is **X**, whose mark is black and so
+needs the white version on a dark ground.
+
+The film re-bakes every particle on a theme change (a `MutationObserver` on `data-theme`): white
+specks are invisible on paper and dark ones on ink, so the neutrals invert while blue and green
+hold.
+
 ## Navigation states
 
 Three states, because "which one am I on" and "which one am I about to click" are different
@@ -375,6 +422,22 @@ Also: style writes are guarded so an unchanged frame costs no recalc; the card t
 translucent gradient rather than `mix-blend-mode`, because a blend group on each of seven cards
 is something the compositor re-resolves every frame while the track scrubs; and the header's
 backdrop blur went from 24px to 12px behind a slightly more opaque ground.
+
+## Measuring paint, not just script
+
+`scripts/perf.mjs` reports script, style and layout. It misses everything the compositor does, so
+a masked `backdrop-filter`, a large gradient or an oversized image can cost plenty and show up as
+nothing. `scripts/paint-trace.mjs` traces the real paint, raster and composite work over a full
+scroll and prints the biggest contributors, with a second run that disables the header blur so the
+cost of that one effect can be read off rather than argued about.
+
+That is how the header veil got sized: at `blur(10px)` over a 110px box it was **565ms vs 504ms**
+of paint work, about 11% of the page's total, for an effect that is polish rather than legibility
+(the gradient tint is what carries that). At `blur(7px)` over a shorter box it measures **530ms vs
+533ms** — free, inside the noise.
+
+The largest single cost on the page is image decoding during scroll, which is inherent to carrying
+thirteen photographs and is already async and responsively sized.
 
 ## Budget
 

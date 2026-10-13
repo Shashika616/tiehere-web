@@ -43,7 +43,7 @@ export default function Ticker({
             key={i}
             className={
               big
-                ? "flex shrink-0 items-center gap-20 whitespace-nowrap font-mono text-[clamp(1.05rem,1.9vw,1.6rem)] lowercase tracking-[0.1em] text-white/75"
+                ? "flex shrink-0 items-center gap-20 whitespace-nowrap font-mono text-[clamp(1.05rem,1.9vw,1.6rem)] lowercase tracking-[0.1em] text-fg-2"
                 : "t-label flex shrink-0 items-center gap-14 whitespace-nowrap"
             }
           >

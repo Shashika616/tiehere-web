@@ -30,7 +30,7 @@ export default function Proximity() {
         </div>
 
         <Rise delay={260} className="mt-20">
-          <div className="border-y border-white/10">
+          <div className="border-y border-line">
             <Ticker items={INTENTS.map((i) => i.label)} duration={54} size="lg" />
           </div>
         </Rise>

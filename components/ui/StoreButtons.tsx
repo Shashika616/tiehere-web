@@ -54,7 +54,7 @@ function Badge({
       <span className="text-left leading-tight">
         <span
           className={`block font-mono text-[0.625rem] font-medium tracking-[0.08em] ${
-            invert ? "text-ink-900/55" : "text-white/60"
+            invert ? "text-cta-fg/70" : "text-fg-2"
           }`}
         >
           {sub}
@@ -64,14 +64,18 @@ function Badge({
     </>
   );
 
+  // The store name keeps full contrast even while the link is unavailable.
+  // Muting the whole badge made the primary call to action read as disabled
+  // chrome rather than as something arriving; the chip beside it is what says
+  // "not yet".
   if (!href) {
     return (
       <span
-        className="inline-flex cursor-default items-center gap-3 rounded-xl border border-white/12 bg-white/[0.03] px-5 py-3 text-white/55"
+        className="inline-flex w-full cursor-default items-center justify-center gap-3 rounded-xl border border-line bg-raise px-5 py-3 text-fg sm:w-auto sm:justify-start"
         aria-label={`${store}, coming soon`}
       >
         {inner}
-        <span className="ml-1 shrink-0 rounded-full border border-white/12 px-2 py-0.5 font-mono text-[0.625rem] tracking-[0.09em] text-white/35">
+        <span className="ml-1 shrink-0 rounded-full border border-line px-2 py-0.5 font-mono text-[0.625rem] tracking-[0.09em] text-fg-3">
           soon
         </span>
       </span>
@@ -86,8 +90,8 @@ function Badge({
       aria-label={`${sub} ${store}`}
       className={
         invert
-          ? "group inline-flex items-center gap-3 rounded-xl bg-white px-5 py-3 text-ink-900 transition-transform duration-150 ease-out hover:scale-[1.02] active:scale-[0.98]"
-          : "group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/[0.06] px-5 py-3 backdrop-blur-md transition-all duration-200 hover:border-white/40 hover:bg-white/[0.11] active:scale-[0.98]"
+          ? "group inline-flex w-full items-center justify-center gap-3 rounded-xl bg-cta px-5 py-3 text-cta-fg transition-transform duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] sm:w-auto sm:justify-start"
+          : "group inline-flex w-full items-center justify-center gap-3 rounded-xl border border-line bg-raise px-5 py-3 backdrop-blur-md transition-all duration-200 hover:border-fg-3 hover:bg-raise-2 active:scale-[0.98] sm:w-auto sm:justify-start"
       }
     >
       {inner}
@@ -96,8 +100,11 @@ function Badge({
 }
 
 export default function StoreButtons({ invert = false }: { invert?: boolean }) {
+  // Stacked and equal width on a phone: side by side they size to their own
+  // labels, so "App Store" came out 25px wider than "Google Play" and the
+  // pair read as a mistake.
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
       <Badge
         store="App Store"
         sub="Download on the"

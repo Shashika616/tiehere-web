@@ -128,7 +128,7 @@ export default function Intents() {
             {INTENTS.map((intent, i) => (
               <article
                 key={intent.id}
-                className="group relative flex h-[clamp(21rem,52vh,27rem)] w-[clamp(16.5rem,25vw,22rem)] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-2xl border border-white/12 bg-ink-800"
+                className="group relative flex h-[clamp(21rem,52vh,27rem)] w-[clamp(16.5rem,25vw,22rem)] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-2xl border border-on-media-line bg-ink-800"
               >
                 {/* Duotone stack: desaturate, then tint toward brand blue and
                     green, then let real colour back in on hover. */}
@@ -138,7 +138,7 @@ export default function Intents() {
                   fill
                   sizes="(max-width: 900px) 70vw, 22rem"
                   priority={i < 2}
-                  className="object-cover saturate-[0.62] brightness-[0.72] contrast-[1.02] transition-[filter,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05] group-hover:saturate-100 group-hover:brightness-[1]"
+                  className="media-card-img object-cover group-hover:scale-[1.05]"
                   style={{ objectPosition: intent.focus }}
                 />
                 <div
@@ -162,14 +162,14 @@ export default function Intents() {
                 />
 
                 <div className="relative p-7">
-                  <h3 className="text-[clamp(1.5rem,2.4vw,2.05rem)] font-medium leading-none tracking-tight text-white">
+                  <h3 className="text-[clamp(1.5rem,2.4vw,2.05rem)] font-medium leading-none tracking-tight text-on-media">
                     {intent.label}
                   </h3>
-                  <p className="t-serif mt-3 text-[1.1rem] leading-snug text-white/90">
+                  <p className="t-serif mt-3 text-[1.1rem] leading-snug text-on-media">
                     {intent.tagline}
                   </p>
-                  <div className="mt-5 h-px w-full bg-white/15" />
-                  <p className="mt-5 text-[0.9375rem] leading-relaxed text-white/75">
+                  <div className="mt-5 h-px w-full bg-on-media-line" />
+                  <p className="mt-5 text-[0.9375rem] leading-relaxed text-on-media-2">
                     {intent.note}
                   </p>
                 </div>

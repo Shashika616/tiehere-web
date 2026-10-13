@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { FORMATIONS, DEFAULT_FORMATION, markLayout, type Vec, type RGB } from "@/lib/formations";
+import {
+  FORMATIONS,
+  DEFAULT_FORMATION,
+  markLayout,
+  palette,
+  type Vec,
+  type RGB,
+} from "@/lib/formations";
 import { scrollState, clamp, lerp, smoothstep, rand } from "@/lib/scroll";
 import { onTick, ORDER } from "@/lib/ticker";
 
@@ -81,7 +88,13 @@ export default function CinematicFilm() {
     let vignetteBmp: HTMLCanvasElement | null = null;
     let bloomRadius = 0;
 
+    const readTheme = () => {
+      palette.dark = document.documentElement.dataset.theme !== "light";
+    };
+    readTheme();
+
     const allocate = () => {
+      readTheme();
       // The hero's empty space moves with the viewport: the headline owns the
       // left on a wide screen and the bottom on a phone.
       // The mark fills the hero rather than sitting in a corner. It bleeds off
@@ -188,10 +201,13 @@ export default function CinematicFilm() {
       const vw = Math.ceil(w / 2);
       const vh2 = Math.ceil(h / 2);
       const vr = Math.hypot(vw, vh2) * 0.62;
+      // The vignette is the ground darkened, so on paper it has to lighten
+      // instead or it rings the frame in soot.
+      const v = palette.dark ? "7,9,12" : "214,221,228";
       vignetteBmp = bake2d(vw, vh2, (c) => {
         const g = c.createRadialGradient(vw / 2, vh2 / 2, vr * 0.28, vw / 2, vh2 / 2, vr);
-        g.addColorStop(0, "rgba(7,9,12,0)");
-        g.addColorStop(1, "rgba(7,9,12,0.72)");
+        g.addColorStop(0, `rgba(${v},0)`);
+        g.addColorStop(1, `rgba(${v},0.72)`);
         c.fillStyle = g;
         c.fillRect(0, 0, vw, vh2);
       });
@@ -294,7 +310,7 @@ export default function CinematicFilm() {
       const dark = luminance < 0.5;
 
       /* --- atmosphere: one soft brand-tinted bloom, drifting --- */
-      if (dark && bloomBmp) {
+      if (dark === palette.dark && bloomBmp) {
         const bx0 = w * (0.5 + Math.sin(time * 0.08) * 0.12 + cmx * 0.04);
         const by0 = h * (0.46 + Math.cos(time * 0.062) * 0.1);
         const d = bloomRadius * 2;
@@ -389,7 +405,7 @@ export default function CinematicFilm() {
 
       /* --- vignette: keeps the frame cinematic and keeps particles from
              competing with type at the edges --- */
-      if (dark && vignetteBmp) {
+      if (vignetteBmp && dark === palette.dark) {
         ctx.drawImage(vignetteBmp, 0, 0, w, h);
       }
     };
@@ -420,10 +436,21 @@ export default function CinematicFilm() {
     window.addEventListener("resize", onResize);
     window.addEventListener("pointermove", onPointer, { passive: true });
 
+    // The theme can change at any moment, and every particle's colour and
+    // every ground depends on it, so the whole thing is re-baked rather than
+    // patched.
+    const themeWatch = new MutationObserver(() => {
+      readTheme();
+      cachedPair = "";
+      buildGradients();
+    });
+    themeWatch.observe(document.documentElement, { attributeFilter: ["data-theme"] });
+
     const stop = onTick({ order: ORDER.film, write: draw });
 
     return () => {
       stop();
+      themeWatch.disconnect();
       ro.disconnect();
       if (pending) cancelAnimationFrame(pending);
       window.clearTimeout(settle);

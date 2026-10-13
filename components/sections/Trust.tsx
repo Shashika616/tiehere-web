@@ -52,7 +52,7 @@ export default function Trust() {
         <div className="hidden md:block">
           <div className="sticky top-[28vh]">
             <div className="relative flex h-[50vh] gap-7">
-              <div className="relative w-px bg-white/12">
+              <div className="relative w-px bg-line">
                 <div
                   className="absolute inset-x-0 top-0 w-px transition-[height] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                   style={{
@@ -66,8 +66,13 @@ export default function Trust() {
                     className="absolute -left-[5px] block h-[11px] w-[11px] rounded-full border transition-all duration-500"
                     style={{
                       top: `calc(${(i / (TRUST.length - 1)) * 100}% - 5px)`,
-                      background: i <= active ? (i === 3 ? "#34C24C" : "#0075F6") : "#0f1318",
-                      borderColor: i <= active ? "transparent" : "rgba(255,255,255,0.22)",
+                      background:
+                        i <= active
+                          ? i === 3
+                            ? "var(--color-brand-green)"
+                            : "var(--color-brand-blue)"
+                          : "var(--color-bg)",
+                      borderColor: i <= active ? "transparent" : "var(--color-line)",
                       transform: i === active ? "scale(1.5)" : "scale(1)",
                     }}
                   />
@@ -81,7 +86,7 @@ export default function Trust() {
                     className="transition-opacity duration-500"
                     style={{ opacity: i === active ? 1 : 0.32 }}
                   >
-                    <p className="t-label !text-white/55">level {r.level}</p>
+                    <p className="t-label !text-fg-3">level {r.level}</p>
                     <p className="text-[1.05rem] font-medium tracking-tight">{r.name}</p>
                   </div>
                 ))}
@@ -99,14 +104,21 @@ export default function Trust() {
               ref={(n) => {
                 rungs.current[i] = n;
               }}
-              className="border-t border-white/10 py-12 first:border-t-0 md:py-20"
+              className="border-t border-line py-12 first:border-t-0 md:py-20"
             >
               <Rise>
                 <div className="flex items-baseline gap-5">
                   <span
                     className="font-mono text-[clamp(2.5rem,5vw,4rem)] leading-none"
                     style={{
-                      color: i === 3 ? "#34C24C" : i === 2 ? "#0075F6" : "rgba(255,255,255,0.28)",
+                      // The two unreached rungs were a hardcoded white at 28%, which
+                      // simply vanished on a paper ground.
+                      color:
+                        i === 3
+                          ? "var(--color-brand-green)"
+                          : i === 2
+                            ? "var(--color-brand-blue)"
+                            : "var(--color-fg-3)",
                     }}
                   >
                     {r.level}
@@ -114,7 +126,7 @@ export default function Trust() {
                   <h3 className="t-h3">{r.name}</h3>
                 </div>
                 <p className="t-lead mt-6 max-w-[44ch]">{r.unlocks}</p>
-                <p className="mt-4 max-w-[44ch] text-[0.9rem] leading-relaxed text-white/45">
+                <p className="mt-4 max-w-[44ch] text-[0.9rem] leading-relaxed text-fg-3">
                   <span className="t-label mr-2 !inline">needs</span>
                   {r.requires}
                 </p>

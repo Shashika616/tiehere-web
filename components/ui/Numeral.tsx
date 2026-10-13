@@ -17,10 +17,10 @@ export default function Numeral({
 
   return (
     <span className={`inline-flex items-center gap-3 ${className}`} aria-hidden="true">
-      <span className="font-mono text-[0.8125rem] font-medium tabular-nums tracking-[0.06em] text-white/55">
+      <span className="font-mono text-[0.8125rem] font-medium tabular-nums tracking-[0.06em] text-fg-3">
         {n}
       </span>
-      <span className="block h-px w-6 bg-white/20" />
+      <span className="block h-px w-6 bg-line" />
     </span>
   );
 }

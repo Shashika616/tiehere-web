@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Lockup from "./Lockup";
+import ThemeToggle from "./ThemeToggle";
 
 /**
  * Transparent over the hero, backed after one viewport. Inverts to dark type
@@ -74,20 +75,14 @@ export default function Header() {
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          stuck ? "border-b border-white/[0.07] bg-[rgba(7,9,12,0.72)] backdrop-blur-md" : ""
-        }`}
+        className="fixed inset-x-0 top-0 z-50"
         data-header
       >
-        {/* Always-on scroll edge effect. The canvas behind the chrome never
-            stops changing, so the type always needs ground under it, not
-            only once the blur material arrives. */}
-        <div
-          aria-hidden="true"
-          className={`header-scrim pointer-events-none absolute inset-x-0 top-0 h-28 transition-opacity duration-500 ${
-            stuck ? "opacity-0" : "opacity-100"
-          }`}
-        />
+        {/* The chrome has no edge. Both the blur and the tint are masked out
+            toward the bottom, so the bar fades into whatever it is over
+            instead of ending in a line across the page. It deepens slightly
+            once there is content behind it. */}
+        <div aria-hidden="true" className="header-veil" data-stuck={stuck ? "" : undefined} />
 
         <div className="shell relative flex h-16 items-center justify-between md:h-20">
           <a href="/#home" aria-label="TieHere, home" className="group inline-flex">
@@ -106,17 +101,20 @@ export default function Header() {
                 <span>{l.label}</span>
               </a>
             ))}
+            <ThemeToggle />
             <a
               href="/#get"
-              className="rounded-full bg-white px-5 py-2.5 text-[0.875rem] font-medium tracking-tight text-ink-900 transition-transform duration-150 ease-out hover:scale-[1.03] active:scale-[0.97]"
+              className="rounded-full bg-cta px-5 py-2.5 text-[0.875rem] font-medium tracking-tight text-cta-fg transition-transform duration-150 ease-out hover:scale-[1.03] active:scale-[0.97]"
             >
               Get the app
             </a>
           </nav>
 
-          <button
+          <div className="flex items-center gap-1 md:hidden">
+            <ThemeToggle className="relative z-50" />
+            <button
             type="button"
-            className="relative z-50 flex h-10 w-10 items-center justify-center md:hidden"
+            className="relative z-50 flex h-10 w-10 items-center justify-center"
             onClick={() => setMenu((m) => !m)}
             aria-expanded={menu}
             aria-label={menu ? "Close menu" : "Open menu"}
@@ -131,7 +129,8 @@ export default function Header() {
                 style={{ transform: menu ? "translateY(-6px) rotate(-45deg)" : "none" }}
               />
             </span>
-          </button>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -172,7 +171,7 @@ export default function Header() {
       >
         <a
           href="/#get"
-          className="flex h-13 w-full items-center justify-center rounded-full bg-white py-3.5 text-[0.95rem] font-medium tracking-tight text-ink-900 transition-transform duration-150 ease-out active:scale-[0.98]"
+          className="flex h-13 w-full items-center justify-center rounded-full bg-cta py-3.5 text-[0.95rem] font-medium tracking-tight text-cta-fg transition-transform duration-150 ease-out active:scale-[0.98]"
         >
           Get TieHere
         </a>

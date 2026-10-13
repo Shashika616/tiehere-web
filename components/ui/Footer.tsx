@@ -56,7 +56,7 @@ export default function Footer() {
   const ref = useInView<HTMLDivElement>(0.15);
 
   return (
-    <footer data-film="knot" className="foot-rise relative overflow-hidden border-t border-white/10">
+    <footer data-film="knot" className="foot-rise relative overflow-hidden border-t border-line">
       <div ref={ref} className="shell grid gap-16 py-20 md:grid-cols-[1.35fr_1fr] md:gap-20 md:py-28">
         <div>
           <h2 className="foot-mark" aria-hidden="true">
@@ -80,7 +80,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="shell grid gap-12 border-t border-white/[0.07] py-14 md:grid-cols-3 md:gap-10">
+      <div className="shell grid gap-12 border-t border-line py-14 md:grid-cols-3 md:gap-10">
         <nav aria-label="Product">
           <p className="t-label mb-6">product</p>
           <ul className="space-y-1">
@@ -109,7 +109,7 @@ export default function Footer() {
 
         <nav aria-label="Reach us">
           <p className="t-label mb-6">reach us</p>
-          <ul className="border-t border-white/10">
+          <ul className="border-t border-line">
             {REACH.map((l) =>
               l.href ? (
                 <li key={l.label}>
@@ -154,7 +154,7 @@ export default function Footer() {
         </nav>
       </div>
 
-      <div className="shell flex flex-col gap-4 border-t border-white/[0.07] py-8 pb-28 md:flex-row md:items-center md:justify-between md:pb-8">
+      <div className="shell flex flex-col gap-4 border-t border-line py-8 pb-28 md:flex-row md:items-center md:justify-between md:pb-8">
         <p className="t-label">
           © {year} {BRAND.name}
         </p>

@@ -73,16 +73,16 @@ export default function HowItWorks() {
 
             <div className="shell relative flex h-full flex-col justify-start pt-[22vh] md:pt-[26vh]">
               <div className="flex items-end gap-6 md:gap-10">
-                <h3 className="t-display !text-[clamp(2.25rem,5.4vw,4.75rem)]">{step.title}</h3>
-                <span className="mb-4 hidden h-px flex-1 bg-white/25 md:block" />
-                <span className="t-label mb-5 hidden shrink-0 !text-white/70 md:block">
+                <h3 className="t-display !text-on-media !text-[clamp(2.25rem,5.4vw,4.75rem)]">{step.title}</h3>
+                <span className="mb-4 hidden h-px flex-1 bg-on-media-line md:block" />
+                <span className="t-label mb-5 hidden shrink-0 !text-on-media-2 md:block">
                   {step.meta}
                 </span>
               </div>
 
               <div className="mt-8 flex items-start gap-8 md:mt-10 md:gap-14">
-                <span className="t-label mt-1.5 shrink-0 !text-white/55">{step.n}</span>
-                <p className="t-lead max-w-[44ch] !text-white/80">{step.body}</p>
+                <span className="t-label mt-1.5 shrink-0 !text-on-media-3">{step.n}</span>
+                <p className="t-lead max-w-[44ch] !text-on-media-2">{step.body}</p>
               </div>
             </div>
           </article>

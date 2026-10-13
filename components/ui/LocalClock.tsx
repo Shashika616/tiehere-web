@@ -53,7 +53,7 @@ export default function LocalClock() {
 
   return (
     <div className="max-w-[26ch]">
-      <p className="text-[clamp(1.05rem,1.7vw,1.4rem)] leading-snug text-white/85">
+      <p className="text-[clamp(1.05rem,1.7vw,1.4rem)] leading-snug text-fg">
         {meta?.place ? (
           <>
             You are in <span className="text-brand-green">{meta.place}</span>.
@@ -77,7 +77,7 @@ export default function LocalClock() {
         &nbsp;
       </p>
 
-      <p className="mt-6 max-w-[30ch] text-[0.9rem] leading-relaxed text-white/45">
+      <p className="mt-6 max-w-[30ch] text-[0.9rem] leading-relaxed text-fg-3">
         A place and a window. Those are the only two things this app ever asks you for.
       </p>
     </div>

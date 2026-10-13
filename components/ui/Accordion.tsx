@@ -1,14 +1,17 @@
 "use client";
 
-import { useRef, useState, useId } from "react";
+import { useState, useId } from "react";
 import type { Faq } from "@/content/site";
 
 export default function Accordion({ items }: { items: Faq[] }) {
-  const [open, setOpen] = useState<number | null>(0);
+  // Everything closed on arrival. An accordion that opens one item for you
+  // reads as a rendering fault rather than as a hint, especially when the
+  // first question is "Is this a dating app?".
+  const [open, setOpen] = useState<number | null>(null);
   const baseId = useId();
 
   return (
-    <div className="border-t border-white/10">
+    <div className="border-t border-line">
       {items.map((item, i) => (
         <Row
           key={i}
@@ -33,10 +36,8 @@ function Row({
   onToggle: () => void;
   id: string;
 }) {
-  const body = useRef<HTMLDivElement>(null);
-
   return (
-    <div className="border-b border-white/10">
+    <div className="border-b border-line">
       <h3>
         <button
           type="button"
@@ -47,7 +48,7 @@ function Row({
         >
           <span className="t-h3 max-w-[48rem] !text-[clamp(1.05rem,2vw,1.6rem)]">{item.q}</span>
           <span
-            className="mt-1 shrink-0 text-xl text-white/40 transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            className="mt-1 shrink-0 text-xl text-fg-3 transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]"
             style={{ transform: isOpen ? "rotate(45deg)" : "none" }}
             aria-hidden="true"
           >
@@ -55,17 +56,19 @@ function Row({
           </span>
         </button>
       </h3>
+      {/* Animated with grid-template-rows rather than a measured height.
+          Reading scrollHeight during render gave 0 on the first pass, because
+          the ref is not attached yet and nothing re-renders to correct it, so
+          an item open by default rendered clipped to its padding. This needs
+          no measurement at all and cannot desync from its content. */}
       <div
         id={`${id}-panel`}
         role="region"
-        className="overflow-hidden transition-[height,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-        style={{
-          height: isOpen ? (body.current?.scrollHeight ?? 0) + 28 : 0,
-          opacity: isOpen ? 1 : 0,
-        }}
+        className="grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{ gridTemplateRows: isOpen ? "1fr" : "0fr", opacity: isOpen ? 1 : 0 }}
       >
-        <div ref={body} className="max-w-[46rem] pb-7">
-          <p className="t-lead !text-[1rem]">{item.a}</p>
+        <div className="overflow-hidden">
+          <p className="t-lead max-w-[46rem] pb-7 !text-[1rem]">{item.a}</p>
         </div>
       </div>
     </div>

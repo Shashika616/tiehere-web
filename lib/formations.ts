@@ -27,13 +27,30 @@ const BLUE: RGB = [0, 117, 246];
 const GREEN: RGB = [52, 194, 76];
 const INK: RGB = [7, 9, 12];
 const PAPER: RGB = [243, 246, 249];
+const PAPER_BG: RGB = [244, 247, 250];
+const INK_FG: RGB = [22, 28, 36];
+const INK_FG_2: RGB = [92, 103, 116];
+
+/**
+ * Which way round the film is painting. The two brand colours never move, but
+ * the neutrals have to: white specks on a paper ground are invisible, and so
+ * are dark ones on ink. Set by the film from `data-theme`, which also forces a
+ * re-bake so every particle picks up the new palette.
+ */
+export const palette = { dark: true };
+
+const neutral = (): RGB => (palette.dark ? WHITE : INK_FG);
+const neutralDim = (): RGB => (palette.dark ? GREY : INK_FG_2);
+/** The page ground, and its opposite for the chapter that runs against it. */
+const ground = (): RGB => (palette.dark ? INK : PAPER_BG);
+const groundAlt = (): RGB => (palette.dark ? PAPER : INK);
 
 /** A handful of particles always carry brand colour so blue/green never arrive from nowhere. */
 function seeded(i: number, blueShare: number, greenShare: number): RGB {
   const r = rand(i + 91);
   if (r < blueShare) return BLUE;
   if (r < blueShare + greenShare) return GREEN;
-  return rand(i + 42) > 0.72 ? GREY : WHITE;
+  return rand(i + 42) > 0.72 ? neutralDim() : neutral();
 }
 
 /**
@@ -47,7 +64,9 @@ const cloud: Formation = {
     o.z = (rand(i + 33) - 0.5) * 2;
   },
   color: (i) => seeded(i, 0.035, 0.03),
-  bg: INK,
+  get bg() {
+    return ground();
+  },
   thin: 0.06,
   life: 1,
 };
@@ -71,7 +90,9 @@ const sparse: Formation = {
     }
   },
   color: (i) => seeded(i, 0.06, 0.05),
-  bg: INK,
+  get bg() {
+    return ground();
+  },
   thin: 0.78,
   life: 0.55,
 };
@@ -98,7 +119,9 @@ const city: Formation = {
     o.y = tower > 0.92 ? 0.52 - rand(i + 101) * 0.62 : 0.52 + (rand(i + 13) - 0.5) * 0.02;
   },
   color: (i) => seeded(i, 0.07, 0.055),
-  bg: [9, 12, 17],
+  get bg() {
+    return ground();
+  },
   thin: 0.1,
   life: 0.35,
 };
@@ -119,7 +142,9 @@ const fan: Formation = {
     o.z = (rand(i + 23) - 0.5) * 0.6;
   },
   color: (i) => seeded(i, 0.1, 0.08),
-  bg: [8, 11, 16],
+  get bg() {
+    return ground();
+  },
   thin: 0.08,
   life: 0.6,
 };
@@ -143,7 +168,9 @@ const ladder: Formation = {
     if (band === 2) return BLUE;
     return GREEN;
   },
-  bg: [8, 11, 16],
+  get bg() {
+    return ground();
+  },
   thin: 0.14,
   life: 0.45,
 };
@@ -159,8 +186,19 @@ const quiet: Formation = {
     o.y = (rand(i + 19) - 0.5) * 0.42;
     o.z = (rand(i + 37) - 0.5) * 1.8;
   },
-  color: (i) => (rand(i + 5) > 0.88 ? [168, 182, 196] : [205, 215, 224]),
-  bg: PAPER,
+  // The quiet chapter sits on the opposite ground, so its neutrals invert
+  // against everything else.
+  color: (i) =>
+    palette.dark
+      ? rand(i + 5) > 0.88
+        ? [168, 182, 196]
+        : [205, 215, 224]
+      : rand(i + 5) > 0.88
+        ? [92, 103, 116]
+        : [58, 68, 80],
+  get bg() {
+    return groundAlt();
+  },
   thin: 0.72,
   life: 0.07,
 };
@@ -178,7 +216,9 @@ const settle: Formation = {
     o.z = (rand(i + 37) - 0.5) * 1.8;
   },
   color: (i) => seeded(i, 0.09, 0.08),
-  bg: INK,
+  get bg() {
+    return ground();
+  },
   thin: 0.5,
   life: 0.3,
 };
@@ -248,7 +288,7 @@ function placeMark(i: number, n: number, o: Vec, k: MarkOpts) {
 
 function markColor(i: number, n: number): RGB {
   const onMark = Math.floor(n * (1 - AMBIENT_SHARE));
-  if (i >= onMark) return rand(i + 77) > 0.8 ? GREY : [146, 156, 168];
+  if (i >= onMark) return rand(i + 77) > 0.8 ? neutralDim() : neutral();
 
   const heads = Math.floor(onMark * HEAD_SHARE);
   if (i < heads) return i % 2 === 0 ? BLUE : GREEN;
@@ -274,7 +314,9 @@ const mark: Formation = {
   place: (i, n, o) =>
     placeMark(i, n, o, { scale: markLayout.scale, dx: markLayout.x, dy: markLayout.y }),
   color: markColor,
-  bg: INK,
+  get bg() {
+    return ground();
+  },
   thin: 0.04,
   life: 0.5,
   // Heavier bodies rather than more of them: radius is free, count is not.
@@ -289,7 +331,9 @@ const mark: Formation = {
 const knot: Formation = {
   place: (i, n, o) => placeMark(i, n, o, { scale: 0.92, dx: 0, dy: -0.04 }),
   color: markColor,
-  bg: INK,
+  get bg() {
+    return ground();
+  },
   thin: 0.03,
   life: 0.3,
   weight: 1.75,

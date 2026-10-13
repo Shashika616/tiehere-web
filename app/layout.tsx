@@ -60,21 +60,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geist.variable} ${geistMono.variable} ${instrument.variable}`}
     >
       <body>
-        {/* Runs before the header is parsed, so the nav lockup is never
-            painted at full opacity and then hidden once the brand flight
-            mounts. That flash was ~280ms and most obvious on a phone, where
+        {/* Runs before anything is parsed, so neither the theme nor the nav
+            lockup is ever painted wrong and then corrected. That flash was ~280ms and most obvious on a phone, where
             there is no large hero lockup drawing the eye away from it.
             Skipped under reduced motion, where there is no flight to wait
             for, and a no-JS visitor never sets it, so the lockup just shows. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.dataset.brandFlight='pending'}}catch(e){}",
+              "try{var d=document.documentElement,t=null;try{t=localStorage.getItem('tiehere:theme')}catch(e){}" +
+              "if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}" +
+              "d.dataset.theme=t;" +
+              "if(!matchMedia('(prefers-reduced-motion: reduce)').matches){d.dataset.brandFlight='pending'}}catch(e){}",
           }}
         />
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-white focus:px-5 focus:py-2 focus:text-sm focus:text-ink-900"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-cta focus:px-5 focus:py-2 focus:text-sm focus:text-cta-fg"
         >
           Skip to content
         </a>
